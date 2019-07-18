@@ -1,0 +1,40 @@
+# Core validation test for CK
+
+- job:
+    name: 'validate-ck'
+    parameters:
+      - string:
+          name: model
+          default: 'validate'
+      - string:
+          name: controller
+          default: 'validate-ck'
+      - string:
+          name: cloud
+          default: 'aws/us-east-2'
+      - string:
+          name: bundle_channel
+          default: 'edge'
+      - string:
+          name: bundle
+      - text:
+          name: overlay
+          description: |
+            YAML bundle overlay blob, this will merge left over existing key:val
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-jenkaas
+    triggers:
+        - timed: "0 12 * * *"
+    wrappers:
+      - ansicolor
+    builders:
+      - virtualenvwrapper
+      - shell: |-
+          #!/bin/bash
+          set -eux
+
+          export GIT_SSH_COMMAND="ssh -i /var/lib/jenkins/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"
+          ogc --spec validations/ck/spec.toml plugin-deps --installable | sh -
+          ogc --spec validations/ck/spec.toml --debug execute
+      - virtualenvwrapper-deactivate

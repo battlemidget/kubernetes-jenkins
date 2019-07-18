@@ -1,0 +1,4 @@
+ogc>=0.2.2<1.0.0
+ogc-plugins-juju>=0.0.2
+ogc-plugins-runner>=0.0.3
+ogc-plugins-env>=0.0.3

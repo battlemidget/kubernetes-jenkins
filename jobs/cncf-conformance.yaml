@@ -38,16 +38,15 @@
 
 
 - job-template:
-    name: 'conformance-{k8sver}-{bundle}'
+    name: 'cncf-{k8sver}-{bundle}'
     description: |
       CNCF Conformance testing for Kubernetes {k8sver} {bundle}.
 
       Please see https://git.io/fNwXY for more information.
-    project-type: pipeline
-    pipeline-scm:
+    project-type: freestyle
+    scm:
       scm:
         - k8s-jenkins-jenkaas
-      script-path: jobs/cncf-conformance/Jenkinsfile
     parameters:
       - string:
           name: build_node
@@ -61,12 +60,9 @@
       - string:
           name: controller
           default: 'cncf'
-      - choice:
+      - string:
           name: cloud
-          choices:
-            - 'aws/us-east-1'
-            - 'google/us-east1'
-            - 'azure/eastus'
+          default: 'aws/us-east-2'
       - string:
           name: bundle_channel
           default: 'edge'
@@ -76,6 +72,18 @@
     properties:
       - build-discarder:
           num-to-keep: 7
+    wrappers:
+      - ansicolor
+      - timestamps
+      - timeout:
+          timeout: 240
+          fail: true
+    builders:
+      - shell: |-
+          #!/bin/bash
+          set -eux
+          juju bootstrap ${cloud} ${controller}-$(uuid | cut -f1 -d-)
+          juju add-model ${controller} ${model}-$(uuid | cut -f1 -d-)
 
 - job-group:
     name: 'conformance'
@@ -84,12 +92,10 @@
     jobs:
       - 'conformance-{k8sver}-{bundle}':
           bundle:
-            - 'canonical-kubernetes'
-            - 'canonical-kubernetes-canal'
-            - 'kubernetes-core'
+            - 'charmed-kubernetes'
       - 'conformance-{k8sver}-{bundle}-s390x':
           bundle:
-            - 'canonical-kubernetes'
+            - 'charmed-kubernetes'
 
 - project:
     name: conformance

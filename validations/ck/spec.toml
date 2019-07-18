@@ -1,0 +1,57 @@
+[Info]
+name = "Validate CK on supported releases"
+description = """
+Runs validation test suite against a vanilla deployment of Charmed Kubernetes
+"""
+
+[Env]
+requires = ["Juju.model",
+            "Juju.controller",
+            "Juju.cloud",
+            "Juju.deploy.bundle_channel",
+            "Juju.deploy.charm_channel"]
+
+[Juju.bootstrap]
+constraints = "arch=amd64"
+debug = false
+disable_add_model = false
+
+[Juju.deploy]
+bundle = "cs:~containers/charmed-kubernetes"
+overlay = """
+applications:
+  kubernetes-master:
+    options:
+      channel: 1.16/edge
+  kubernetes-worker:
+    options:
+      channel: 1.16/edge
+"""
+bundle_channel = "edge"
+charm_channel = "edge"
+wait = true
+
+[[Runner]]
+name = "Validating deployment"
+run = """
+#!/bin/bash
+set -eux
+
+export GIT_SSH_COMMAND=\"ssh -i /var/lib/jenkins/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no\"
+
+CONTROLLER=$JUJU_CONTROLLER \
+     MODEL=$JUJU_MODEL \
+     CLOUD=$JUJU_CLOUD \
+     TEST_CHARM_CHANNEL=$JUJU_DEPLOY_BUNDLE_CHANNEL \
+     pytest integration/validation.py
+"""
+deps = ['pip:flaky>=3.6.0,<4', 'pip:pytest', 'pip:asyncio_extras', 'pip:pytest-asyncio']
+
+[[Runner]]
+name = "Tearing down deployment"
+run = """
+#!/bin/bash
+set -eux
+
+juju destroy-controller -y --destroy-all-models --destroy-storage $JUJU_CONTROLLER"
+"""

@@ -1,0 +1,27 @@
+# K8s Jenkin GIT repos
+- scm:
+    name: k8s-jenkins-jenkaas
+    scm:
+      - git:
+          url: https://github.com/charmed-kubernetes/kubernetes-jenkins.git
+          branches:
+            - 'master'
+        skip-tag: true
+        fastpoll: true
+        shallow-clone: true
+        clean: {before: true}
+
+- builder:
+    name: virtualenvwrapper
+    builders:
+      - shell: |
+          pip3 install --user virtualenvwrapper
+          pip3 install --user virtualenv
+          pip3 install --user -rrequirements.txt
+          source ~/.local/bin/virtualenvwrapper.sh
+          mktmpenv -n
+- builder:
+    name: virtualenvwrapper-deactivate
+    builders:
+      - shell: |
+          deactivate

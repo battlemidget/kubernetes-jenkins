@@ -41,6 +41,21 @@
           - master
 
 - builder:
+    name: virtualenvwrapper
+    builders:
+      - shell: |
+          pip3 install --user virtualenvwrapper
+          pip3 install --user virtualenv
+          pip3 install --user -rrequirements.txt
+          source ~/.local/bin/virtualenvwrapper.sh
+          mktmpenv -n
+- builder:
+    name: virtualenvwrapper-deactivate
+    builders:
+      - shell: |
+          deactivate
+
+- builder:
     name: set-global-env
     builders:
       - shell: |
