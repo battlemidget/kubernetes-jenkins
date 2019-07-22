@@ -1,0 +1,34 @@
+[Info]
+name = "Builds the charms and bundles"
+description = """
+Builds the charms and bundles that make up the Charmed Kubernetes deployment.
+"""
+
+[Charm]
+name = "Building Charms"
+description = """
+Build the charms that make up a Juju bundle
+"""
+deps = ["snap:charm/latest/edge:classic", "apt:docker.io"]
+
+[Charm.charms]
+charm_branch = "master"
+filter_by_tag = "k8s"
+layer_branch = "master"
+layer_index = "https://charmed-kubernetes.github.io/layer-index/"
+layer_list = "charm-layer-list.yaml"
+list = "charm-support-matrix.yaml"
+resource_spec = "resource-spec.yaml"
+to_channel = "edge"
+add_to_env = ["CHARM_BUILD_DIR",
+              "CHARM_LAYERS_DIR",
+              "CHARM_INTERFACES_DIR",
+              "CHARM_CACHE_DIR",
+              "TMPDIR",
+              "WORKSPACE"]
+
+
+[Charm.bundles]
+filter_by_tag = "k8s"
+list = "charm-bundles-list.yaml"
+repo = "https://github.com/juju-solutions/bundle-canonical-kubernetes.git"

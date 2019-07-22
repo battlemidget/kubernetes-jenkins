@@ -1,0 +1,76 @@
+[Info]
+name = "Verify CK Conformance"
+description = """
+Verifies that CK passes CNCF conformance spec
+"""
+
+[Env]
+requires = ["JUJU_MODEL",
+            "JUJU_CONTROLLER",
+            "JUJU_CLOUD",
+            "JUJU_DEPLOY_BUNDLE_CHANNEL"]
+
+deps = ["snap:juju/latest/candidate:classic",
+        "snap:go/1.12/stable:classic",
+        "snap:kubectl/latest/stable:classic"]
+
+[[Runner]]
+name = "Running CNCF Conformance"
+description = """
+See https://www.cncf.io/certification/software-conformance/ for more information.
+"""
+run = """
+#!/bin/bash
+set -eux
+
+mkdir -p $HOME/.kube
+juju scp -m $JUJU_CONTROLLER:$JUJU_MODEL kubernetes-master/0:config $HOME/.kube/
+export RBAC_ENABLED=$(kubectl api-versions | grep \"rbac.authorization.k8s.io/v1beta1\" -c)
+kubectl version
+sonobuoy version
+sonobuoy run
+"""
+tags = ["cncf", "cncf-run"]
+
+[[Runner]]
+name = "Waiting for Sonobuoy to complete"
+description = """
+See https://www.cncf.io/certification/software-conformance/ for more information.
+"""
+run = """
+#!/bin/bash
+set -eux
+
+sonobuoy status|grep -q 'Sonobuoy has completed'
+"""
+wait_for_success = true
+timeout = 10800
+back_off = 15
+tags = ["cncf", "cncf-wait-status"]
+
+[[Runner]]
+name = "Downloading conformance results"
+description = "Download results"
+run = """
+#!/bin/bash
+set -eux
+
+sonobuoy retrieve results/.
+kubectl version
+"""
+wait_for_success = true
+back_off = 5
+retries = 5
+tags = ["cncf", "cncf-download-results"]
+
+[[Runner]]
+name = "Tearing down deployment"
+description = "Tear down juju"
+run = """
+#!/bin/bash
+set -eux
+
+juju destroy-controller -y --destroy-all-models --destroy-storage $JUJU_CONTROLLER"
+"""
+timeout = 180
+tags = ["teardown"]

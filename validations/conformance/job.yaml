@@ -1,7 +1,7 @@
 # Core validation test for CK
 
 - job:
-    name: 'validate-ck'
+    name: 'conformance'
     project-type: freestyle
     scm:
       - k8s-jenkins-bm
@@ -18,11 +18,15 @@
           #!/bin/bash
           set -eux
           cat <<- EOF > $WORKSPACE/deployment.toml
+
           [Juju.bootstrap]
+
           constraints = "$JUJU_BOOTSTRAP_CONSTRAINTS"
           debug = "$JUJU_BOOTSTRAP_DEBUG"
-          disable_add_model = "$JUJU_BOOTSTRAP_DISABLE_ADD_MODEL"
+          disable_add_model = false
+
           [Juju.deploy]
+
           bundle = "$JUJU_DEPLOY_BUNDLE"
           overlay = \"""
           applications:
@@ -33,10 +37,18 @@
               options:
                 channel: $SNAP_VERSION
           """
+          wait = true
+          bundle_channel = "$JUJU_DEPLOY_BUNDLE_CHANNEL"
+          charm_channel = "$JUJU_DEPLOY_BUNDLE_CHANNEL"
+
+          [Juju.config]
+
+          set = ["kubernetes-master allow-privileged=true",
+                 "kubernetes-worker allow-privileged=true"]
           EOF
 
-          ogc --spec validations/ck/spec.toml plugin-deps --installable | sh -
-          ogc --spec validations/ck/spec.toml \
+          ogc --spec validations/conformance/spec.toml plugin-deps --installable | sh -
+          ogc --spec validations/conformance/spec.toml \
               --spec $WORKSPACE/deployment.toml \
               --debug execute
       - virtualenvwrapper-deactivate

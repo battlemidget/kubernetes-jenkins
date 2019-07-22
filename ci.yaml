@@ -11,6 +11,18 @@
         shallow-clone: true
         clean: {before: true}
 
+- scm:
+    name: k8s-jenkins-bm
+    scm:
+      - git:
+          url: https://github.com/battlemidget/kubernetes-jenkins.git
+          branches:
+            - 'stokes-ogc'
+        skip-tag: true
+        fastpoll: true
+        shallow-clone: true
+        clean: {before: true}
+
 - builder:
     name: virtualenvwrapper
     builders:

@@ -1,0 +1,16 @@
+# <cynerva> stokaneenja: https://github.com/charmed-kubernetes/kubernetes-docs/pull/241
+# <cynerva> stokaneenja: or https://deploy-preview-241--cdk-docs-next.netlify.com/kubernetes/docs/using-vault scroll down to "Transitioning an existing cluster from EasyRSA to Vault"
+# <stokaneenja> cynerva, great thanks
+# <stokaneenja> cynerva, do i need to save the unseal keys if im just doing a single test?
+# <stokaneenja> and a followup, do i need to remove easyrsa before or after doing a validation test
+# <stokaneenja> reason i ask is the text says "Wait a few minutes for the cluster to settle, and ensure that all services and workloads are functioning as expected.
+# <stokaneenja> After the transition, you must remove EasyRSA to prevent it from conflicting with Vault:"
+# <stokaneenja> then the remove is documented right after
+# <cynerva> stokaneenja: for testing purposes, you can get away with configuring vault with totally-unsecure-auto-unlock=true
+# <cynerva> so you don't have to unlock it manually
+# <stokaneenja> ah nice
+# <cynerva> stokaneenja: uhh well, for thoroughness, we would want to validate after each step there. relate to etcd, wait, validate. relate to kubernetes, wait, validate. remove easyrsa, validate.
+# <cynerva> stokaneenja: if i had to pick just one, it'd be the one at the end, after removing easyrsa
+# <stokaneenja> ok so the last 2
+# <stokaneenja> we can do the first one if we need it later
+# <cynerva> +1 sounds good

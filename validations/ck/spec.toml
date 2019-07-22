@@ -5,11 +5,11 @@ Runs validation test suite against a vanilla deployment of Charmed Kubernetes
 """
 
 [Env]
-requires = ["Juju.model",
-            "Juju.controller",
-            "Juju.cloud",
-            "Juju.deploy.bundle_channel",
-            "Juju.deploy.charm_channel"]
+requires = ["JUJU_MODEL",
+            "JUJU_CONTROLLER",
+            "JUJU_CLOUD",
+            "JUJU_DEPLOY_BUNDLE_CHANNEL"]
+GIT_SSH_COMMAND = "ssh -i /var/lib/jenkins/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"
 
 [Juju.bootstrap]
 constraints = "arch=amd64"
@@ -37,15 +37,17 @@ run = """
 #!/bin/bash
 set -eux
 
-export GIT_SSH_COMMAND=\"ssh -i /var/lib/jenkins/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no\"
-
-CONTROLLER=$JUJU_CONTROLLER \
-     MODEL=$JUJU_MODEL \
-     CLOUD=$JUJU_CLOUD \
-     TEST_CHARM_CHANNEL=$JUJU_DEPLOY_BUNDLE_CHANNEL \
-     pytest integration/validation.py
+pytest integration/validation.py --connection $JUJU_CONTROLLER:$JUJU_MODEL \
+                                 --cloud $JUJU_CLOUD \
+                                 --bundle-channel $JUJU_DEPLOY_BUNDLE_CHANNEL
 """
-deps = ['pip:flaky>=3.6.0,<4', 'pip:pytest', 'pip:asyncio_extras', 'pip:pytest-asyncio']
+deps = ['pip:flaky>=3.6.0,<4',
+        'pip:pytest',
+        'pip:asyncio_extras',
+        'pip:pytest-asyncio',
+        'pip:juju',
+        'snap:juju/latest/candidate',
+        'snap:juju-wait/latest/stable']
 
 [[Runner]]
 name = "Tearing down deployment"

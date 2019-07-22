@@ -1,0 +1,159 @@
+[Info]
+name = "Validate CK in limited/no connectivity environment"
+description = """
+Runs validation test suite against a vanilla deployment of Charmed Kubernetes in
+an environment that does not have access to the outside world.
+"""
+
+[[Runner]]
+name = "Setup APT mirror"
+description = "This sync's a Debian APT mirror. This should happen prior to isolating the cluster."
+run = """
+#!/bin/bash
+
+set -eux
+
+sudo tee /etc/apt/mirror.list > /dev/null <<EOL
+set nthreads     20
+set _tilde 0
+
+deb http://archive.ubuntu.com/ubuntu bionic main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu bionic-security main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu bionic-updates main restricted universe multiverse
+deb http://archive.ubuntu.com/ubuntu bionic-backports main restricted universe multiverse
+
+deb-src http://archive.ubuntu.com/ubuntu bionic main restricted universe multiverse
+deb-src http://archive.ubuntu.com/ubuntu bionic-security main restricted universe multiverse
+deb-src http://archive.ubuntu.com/ubuntu bionic-updates main restricted universe multiverse
+deb-src http://archive.ubuntu.com/ubuntu bionic-backports main restricted universe multiverse
+
+clean http://archive.ubuntu.com/ubuntu
+EOL
+
+sudo apt-mirror
+sudo a2ensite ubuntu-mirror.conf
+sudo systemctl restart apache2
+"""
+deps = ["apt:apache2", "apt-mirror", "simplestreams"]
+tags = ["setup-apt-mirror"]
+
+[[Runner]]
+name = "Setup docker registry"
+description = "Configures the docker registry for internal use. This should happen prior to isolating the cluster."
+run = """
+#!/bin/bash
+set -eux
+
+PRIMARYIP=`hostname -i`
+export REGISTRY=\"$PRIMARYIP:5000\"
+
+sudo tee /etc/docker/daemon.json > /dev/null <<EOL
+{
+  \"insecure-registries\": [\"$REGISTRY\"]
+}
+EOL
+
+sudo systemctl restart docker
+sudo docker run -d -p 5000:5000 --restart=always --name registry registry:2
+
+"""
+deps = ['apt:docker.io']
+tags = ["setup-docker-registry"]
+
+[[Runner]]
+name = "Load docker images"
+description = "Pull down docker images for use with cdk-addons and k8s overall. This should happen prior to isolating the cluster."
+run = """
+#!/bin/bash
+
+set -eux
+sudo docker pull k8s.gcr.io/pause-amd64:3.1
+sudo docker tag k8s.gcr.io/pause-amd64:3.1 ${REGISTRY}/pause-amd64:3.1
+sudo docker push ${REGISTRY}/pause-amd64:3.1
+
+sudo docker pull quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.16.1
+sudo docker tag quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.16.1 ${REGISTRY}/kubernetes-ingress-controller/nginx-ingress-controller:0.16.1
+sudo docker push ${REGISTRY}/kubernetes-ingress-controller/nginx-ingress-controller:0.16.1
+
+sudo docker pull k8s.gcr.io/defaultbackend:1.4
+sudo docker tag k8s.gcr.io/defaultbackend:1.4 ${REGISTRY}/defaultbackend:1.4
+sudo docker push ${REGISTRY}/defaultbackend:1.4
+
+sudo docker pull cdkbot/addon-resizer-amd64:1.8.1
+sudo docker tag cdkbot/addon-resizer-amd64:1.8.1 ${REGISTRY}/addon-resizer-amd64:1.8.1
+sudo docker push ${REGISTRY}/addon-resizer-amd64:1.8.1
+
+sudo docker pull k8s.gcr.io/heapster-amd64:v1.5.3
+sudo docker tag k8s.gcr.io/heapster-amd64:v1.5.3 ${REGISTRY}/heapster-amd64:v1.5.3
+sudo docker push ${REGISTRY}/heapster-amd64:v1.5.3
+
+sudo docker pull k8s.gcr.io/heapster-influxdb-amd64:v1.3.3
+sudo docker tag k8s.gcr.io/heapster-influxdb-amd64:v1.3.3 ${REGISTRY}/heapster-influxdb-amd64:v1.3.3
+sudo docker push ${REGISTRY}/heapster-influxdb-amd64:v1.3.3
+
+sudo docker pull k8s.gcr.io/heapster-grafana-amd64:v4.4.3
+sudo docker tag k8s.gcr.io/heapster-grafana-amd64:v4.4.3 ${REGISTRY}/heapster-grafana-amd64:v4.4.3
+sudo docker push ${REGISTRY}/heapster-grafana-amd64:v4.4.3
+
+sudo docker pull k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.10
+sudo docker tag k8s.gcr.io/k8s-dns-kube-dns-amd64:1.14.10 ${REGISTRY}/k8s-dns-kube-dns-amd64:1.14.10
+sudo docker push ${REGISTRY}/k8s-dns-kube-dns-amd64:1.14.10
+
+sudo docker pull k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.14.10
+sudo docker tag k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64:1.14.10 ${REGISTRY}/k8s-dns-dnsmasq-nanny-amd64:1.14.10
+sudo docker push ${REGISTRY}/k8s-dns-dnsmasq-nanny-amd64:1.14.10
+
+sudo docker pull k8s.gcr.io/k8s-dns-sidecar-amd64:1.14.10
+sudo docker tag k8s.gcr.io/k8s-dns-sidecar-amd64:1.14.10 ${REGISTRY}/k8s-dns-sidecar-amd64:1.14.10
+sudo docker push ${REGISTRY}/k8s-dns-sidecar-amd64:1.14.10
+
+sudo docker pull k8s.gcr.io/kubernetes-dashboard-amd64:v1.8.3
+sudo docker tag k8s.gcr.io/kubernetes-dashboard-amd64:v1.8.3 ${REGISTRY}/kubernetes-dashboard-amd64:v1.8.3
+sudo docker push ${REGISTRY}/kubernetes-dashboard-amd64:v1.8.3
+
+sudo docker pull k8s.gcr.io/metrics-server-amd64:v0.2.1
+sudo docker tag k8s.gcr.io/metrics-server-amd64:v0.2.1 ${REGISTRY}/metrics-server-amd64:v0.2.1
+sudo docker push ${REGISTRY}/metrics-server-amd64:v0.2.1
+
+sudo docker pull quay.io/calico/node:v2.6.10
+sudo docker tag quay.io/calico/node:v2.6.10 ${REGISTRY}/calico/node:v2.6.10
+sudo docker push ${REGISTRY}/calico/node:v2.6.10
+
+sudo docker pull quay.io/calico/kube-controllers:v1.0.4
+sudo docker tag quay.io/calico/kube-controllers:v1.0.4 ${REGISTRY}/calico/kube-controllers:v1.0.4
+sudo docker push ${REGISTRY}/calico/kube-controllers:v1.0.4
+
+sudo docker pull sonatype/nexus3:latest
+sudo docker tag sonatype/nexus3:latest ${REGISTRY}/nexus3:latest
+sudo docker push ${REGISTRY}/nexus3:latest
+
+sudo docker pull rancher/rancher:latest
+sudo docker tag rancher/rancher:latest ${REGISTRY}/rancher:latest
+sudo docker push ${REGISTRY}/rancher:latest
+"""
+tags = ["setup-docker-images"]
+
+[[Runner]]
+name = "Setup Squid Proxy"
+description = "Setup a squid proxy for offline use"
+run_script = "#!/bin/bash
+git clone https://github.com/charmed-kubernetes/cdk-offline.git
+
+(
+  cd cdk-offline
+  ./deploy-squid.sh
+)
+"""
+
+[[Runner]]
+name = "Setup Squid Proxy"
+description = "Setup a squid proxy for offline use"
+run_script = "#!/bin/bash
+git clone https://github.com/charmed-kubernetes/cdk-offline.git
+
+(
+  cd cdk-offline
+  ./deploy-squid.sh
+)
+"""
+tags = ["setup-squid-proxy"]

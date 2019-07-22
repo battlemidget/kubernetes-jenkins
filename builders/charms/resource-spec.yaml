@@ -1,0 +1,27 @@
+'cs:~containers/canal':
+  calico-amd64.tar.gz: calico
+  calico-arm64.tar.gz: calico-arm64
+  calico-upgrade-amd64.tar.gz: calico-upgrade
+  calico-upgrade-arm64.tar.gz: calico-upgrade-arm64
+  calico-node-image.tar.gz: calico-node-image
+  flannel-amd64.tar.gz: flannel
+  flannel-arm64.tar.gz: flannel-arm64
+'cs:~containers/calico':
+  calico-amd64.tar.gz: calico
+  calico-arm64.tar.gz: calico-arm64
+  calico-upgrade-amd64.tar.gz: calico-upgrade
+  calico-upgrade-arm64.tar.gz: calico-upgrade-arm64
+  calico-node-image.tar.gz: calico-node-image
+'cs:~containers/flannel':
+  flannel-amd64.tar.gz: flannel-amd64
+  flannel-arm64.tar.gz: flannel-arm64
+  flannel-s390x.tar.gz: flannel-s390x
+'cs:~containers/kubernetes-worker':
+  cni-amd64.tgz: cni-amd64
+  cni-arm64.tgz: cni-arm64
+  cni-s390x.tgz: cni-s390x
+'cs:~containers/tigera-secure-ee':
+  calico-cni-amd64.tar.gz: calico-cni
+  calico-cni-arm64.tar.gz: calico-cni-arm64
+  calicoctl-image.tar.gz: calicoctl-image
+  calico-node-image.tar.gz: calico-node-image
