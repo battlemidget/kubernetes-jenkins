@@ -100,14 +100,14 @@ def _pull_layers(layer_index, layer_list, layer_branch, retries=15, timeout=60):
 
         def download():
             for line in sh.charm(
-                "pull-source", "-v", "-i", layer_index, layer_name, _iter=True
+                    "pull-source", "-v", "-i", layer_index, layer_name, _iter=True, _bg_exc=False
             ):
                 click.echo(f" -- {line.strip()}")
 
         try:
             num_runs += 1
             download()
-        except sh.ErrorReturnCode_1 as e:
+        except sh.ErrorReturnCode as e:
             click.echo(f"Problem: {e}, retrying [{num_runs}/{retries}]")
             if num_runs == retries:
                 raise SystemExit(f"Could not download charm after {retries} retries.")
@@ -183,7 +183,7 @@ def _resource(charm_entity, channel, builder, out_path, resource_spec):
     resources = yaml.safe_load(resources.stdout.decode())
     builder_sh = Path(builder).absolute()
     click.echo(builder_sh)
-    for line in sh.bash(str(builder_sh), _cwd=out_path, _iter=True, _err_to_out=True):
+    for line in sh.bash(str(builder_sh), _cwd=out_path, _iter=True, _bg_exc=False):
         click.echo(line.strip())
     for line in glob("{}/*".format(out_path)):
         resource_path = Path(line)
@@ -301,12 +301,12 @@ def build(
 
             dst_path = str(charm_env.build_dir / charm_name)
             for line in sh.git.clone(
-                "--branch", charm_branch, downstream, src_path, _iter=True
+                    "--branch", charm_branch, downstream, src_path, _iter=True, _bg_exc=False
             ):
                 click.echo(line)
 
             for line in sh.charm.build(
-                r=True, force=True, _cwd=src_path, _iter=True, _err_to_out=True
+                r=True, force=True, _cwd=src_path, _iter=True, _bg_exc=True
             ):
                 click.echo(line.strip())
             sh.charm.proof(_cwd=dst_path)
@@ -354,7 +354,7 @@ def _build_bundles(bundle_list, filter_by_tag, bundle_repo, to_channel, dry_run)
     sh.rm('-rf', bundle_build_dir)
     os.makedirs(str(bundle_repo_dir), exist_ok=True)
     os.makedirs(str(bundle_build_dir), exist_ok=True)
-    for line in sh.git.clone(bundle_repo, str(bundle_repo_dir), _iter=True):
+    for line in sh.git.clone(bundle_repo, str(bundle_repo_dir), _iter=True, _bg_exc=False):
         click.echo(line)
     for bundle_map in _bundle_list:
         for bundle_name, bundle_opts in bundle_map.items():

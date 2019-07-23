@@ -26,14 +26,15 @@
     triggers:
         - timed: "@daily"
     builders:
-      - virtualenvwrapper
       - shell: |-
           #!/bin/bash
           set -eux
 
           export VIRTUAL_ENV_DISABLE_PROMPT=1
-          . /var/lib/jenkins/venvs/ci/bin/activate
           export PYTHONPATH=builders/snaps
+
+          . /var/lib/jenkins/venvs/ci/bin/activate
+          pip install -rrequirements.txt
 
           export PATH=/var/lib/jenkins/venvs/ci/bin:$PATH
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"
@@ -48,4 +49,3 @@
           pip install -rbuilders/snaps/requirements.txt
           ogc --spec builders/snaps/spec.toml plugin-deps --installable
           ogc --spec builders/snaps/spec.toml --debug execute -t sync
-      - virtualenvwrapper-deactivate

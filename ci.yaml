@@ -22,15 +22,3 @@
         fastpoll: true
         shallow-clone: true
         clean: {before: true}
-
-- builder:
-    name: virtualenvwrapper
-    builders:
-      - shell: |
-          #!/bin/bash -ex
-          /var/lib/jenkins/venvs/ci/bin/pip3 install -rrequirements.txt
-- builder:
-    name: virtualenvwrapper-deactivate
-    builders:
-      - shell: |
-          deactivate
