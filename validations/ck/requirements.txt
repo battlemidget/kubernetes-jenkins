@@ -1,0 +1,5 @@
+flaky>=3.6.0,<4
+pytest
+asyncio_extras
+pytest-asyncio
+juju

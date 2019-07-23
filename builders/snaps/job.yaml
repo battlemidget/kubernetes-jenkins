@@ -1,0 +1,47 @@
+# Build snaps
+
+- job:
+    name: 'ogc-build-snaps'
+    description: |
+      Sync all release tags from upstream, then create snap recipes to be built
+      and promoted into the snap store.
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-bm
+    parameters:
+      - string:
+          name: SNAP_LIST
+          default: builders/snaps/k8s-snap-list.yaml
+    wrappers:
+      - ansicolor
+      - workspace-cleanup
+      - credentials-binding:
+          - username-password-separated:
+              credential-id: k8s_team_ci_lp
+              username: K8STEAMCI_USR
+              password: K8STEAMCI_PSW
+          - file:
+              credential-id: launchpad_creds
+              variable: LPCREDS
+    triggers:
+        - timed: "@daily"
+    builders:
+      - virtualenvwrapper
+      - shell: |-
+          #!/bin/bash
+          set -eux
+
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"
+          export SNAP_LIST="$SNAP_LIST"
+          export K8STEAMCI_USR="$K8STEAMCI_USR"
+          export K8STEAMCI_PSW="$K8STEAMCI_PSW"
+          # export LPCREDS="$LPCREDS"
+
+          echo $K8STEAMCI_USR
+          echo $K8STEAMCI_PSW
+
+          ogc --spec builders/snaps/spec.toml \
+              --spec $WORKSPACE/deployment.toml plugin-deps --installable | sh -
+          ogc --spec builders/snaps/spec.toml \
+              --spec $WORKSPACE/deployment.toml --debug execute -t sync
+      - virtualenvwrapper-deactivate

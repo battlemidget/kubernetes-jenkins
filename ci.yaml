@@ -29,9 +29,9 @@
       - shell: |
           pip3 install --user virtualenvwrapper
           pip3 install --user virtualenv
-          pip3 install --user -rrequirements.txt
           source ~/.local/bin/virtualenvwrapper.sh
           mktmpenv -n
+          pip3 install -rrequirements.txt
 - builder:
     name: virtualenvwrapper-deactivate
     builders:

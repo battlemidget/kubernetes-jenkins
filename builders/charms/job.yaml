@@ -11,6 +11,7 @@
           default: 'https://charmed-kubernetes.github.io/layer-index/'
       - string:
           name: LAYER_LIST
+          default: "builders/charms/charm-layer-list.yaml"
       - string:
           name: LAYER_BRANCH
           default: 'master'
@@ -23,18 +24,22 @@
             The charm git branch to checkout prior to building
       - string:
           name: CHARM_LIST
+          default: "builders/charms/charm-list.yaml"
       - string:
           name: BUNDLE_LIST
+          default: "builders/charms/charm-bundles-list.yaml"
       - string:
           name: BUNDLE_REPO
+          default: "https://github.com/charmed-kubernetes/bundle-canonical-kubernetes.git"
       - string:
           name: RESOURCE_SPEC
+          default: "builders/charms/resource-spec.yaml"
       - string:
           name: TO_CHANNEL
           default: 'edge'
           description: Channel to publish charm to
       - string:
-          name: TAG
+          name: FILTER_BY_TAG
           default: 'k8s'
           description: |
             Filter the builds by tag (ie. k8s). A tag can also be the name of a
@@ -61,43 +66,20 @@
           rm -rf "$CHARM_INTERFACES_DIR" && mkdir -p "$CHARM_INTERFACES_DIR"
           mkdir -p $TMPDIR
 
-          cat <<- EOF > $WORKSPACE/deployment.toml
-          [Charm]
-          name = "Building Charms"
-          description = """
-          Build the charms that make up a Juju bundle
-          """
-          deps = ["snap:charm/latest/edge:classic", "apt:docker.io"]
+          export BUNDLE_LIST="$BUNDLE_LIST"
+          export BUNDLE_REPO="$BUNDLE_REPO"
+          export CHARM_BRANCH="$CHARM_BRANCH"
+          export CHARM_LIST="$CHARM_LIST"
+          export FILTER_BY_TAG="$FILTER_BY_TAG"
+          export LAYER_BRANCH="$LAYER_BRANCH"
+          export LAYER_INDEX="$LAYER_INDEX"
+          export LAYER_LIST="$LAYER_LIST"
+          export RESOURCE_SPEC="$RESOURCE_SPEC"
+          export TO_CHANNEL="$TO_CHANNEL"
 
-          [Charm.charms]
-          charm_branch = "$CHARM_BRANCH"
-          filter_by_tag = "$TAG"
-          layer_branch = "$LAYER_BRANCH"
-          layer_index = "$LAYER_INDEX"
-          layer_list = "$LAYER_LIST"
-          list = "$CHARM_LIST"
-          resource_spec = "$RESOURCE_SPEC"
-          to_channel = "edge"
-          add_to_env = ["CHARM_BUILD_DIR",
-                        "CHARM_LAYERS_DIR",
-                        "CHARM_INTERFACES_DIR",
-                        "CHARM_CACHE_DIR",
-                        "TMPDIR",
-                        "WORKSPACE"]
-
-
-          [Charm.bundles]
-          filter_by_tag = "k8s"
-          list = "$BUNDLE_LIST"
-          repo = "$BUNDLE_REPO"
-          EOF
-
-          ogc --spec builders/charms/spec.toml \
-              --spec $WORKSPACE/deployment.toml plugin-deps --installable | sh -
-          ogc --spec builders/charms/spec.toml \
-              --spec $WORKSPACE/deployment.toml --debug execute -t build-charms
-          ogc --spec builders/charms/spec.toml \
-              --spec $WORKSPACE/deployment.toml --debug execute -t build-bundles
+          ogc --spec builders/charms/spec.toml plugin-deps --installable | sh -
+          ogc --spec builders/charms/spec.toml --debug execute -t build-charms
+          ogc --spec builders/charms/spec.toml --debug execute -t build-bundles
 
           # charm build --charm-list includes/charm-support-matrix.inc \
           #      --charm-branch $CHARM_BRANCH \

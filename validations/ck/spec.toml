@@ -3,57 +3,74 @@ name = "Validate CK on supported releases"
 description = """
 Runs validation test suite against a vanilla deployment of Charmed Kubernetes
 """
+deps = ['snap:juju/latest/candidate',
+        'snap:juju-wait/latest/stable',
+        'pip:validations/ck/requirements.txt']
 
-[Env]
-requires = ["JUJU_MODEL",
-            "JUJU_CONTROLLER",
-            "JUJU_CLOUD",
-            "JUJU_DEPLOY_BUNDLE_CHANNEL"]
-GIT_SSH_COMMAND = "ssh -i /var/lib/jenkins/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"
+[[Runner]]
+name = "Bootstrap"
+description = "Bootstrap a controller for a kubernetes deployment"
+env_requires = ["JUJU_BOOTSTRAP_CONSTRAINTS", "JUJU_CONTROLLER", "JUJU_CLOUD", "JUJU_MODEL"]
+entry_point = ["juju"]
+args = ["bootstrap",
+        "--bootstrap-constraints", "$JUJU_BOOTSTRAP_CONSTRAINTS",
+        "-d", "$JUJU_MODEL",
+        "$JUJU_CLOUD",
+        "$JUJU_CONTROLLER",
+        "--debug"]
+tags = ["juju-bootstrap"]
 
-[Juju.bootstrap]
-constraints = "arch=amd64"
-debug = false
-disable_add_model = false
+[[Runner]]
+name = "Deploy Kubernetes"
+description = "Deploys a reference architecture Kubernetes"
+env_requires = ["JUJU_MODEL",
+                "JUJU_CONTROLLER",
+                "JUJU_DEPLOY_BUNDLE",
+                "JUJU_DEPLOY_BUNDLE_CHANNEL",
+                "SNAP_VERSION"]
+run="""
+#!/bin/bash
 
-[Juju.deploy]
-bundle = "cs:~containers/charmed-kubernetes"
-overlay = """
-applications:
-  kubernetes-master:
-    options:
-      channel: 1.16/edge
-  kubernetes-worker:
-    options:
-      channel: 1.16/edge
+set -eux
+
+echo \"Checking if bundle is from charmstore or locally\"
+python3 - <<'EOF' $JUJU_DEPLOY_BUNDLE
+import sys
+sys.exit(0) if sys.argv[1].startswith('cs:') else sys.exit(1)
+EOF
+
+RET=$?
+if [ $RET -eq 0 ]; then
+   tmp_dir=$(mktemp -d -t ogc-XXXXXX)
+   charm pull $JUJU_DEPLOY_BUNDLE --channel $JUJU_DEPLOY_BUNDLE_CHANNEL $tmp_dir
+   cmd=\"juju deploy -m $JUJU_CONTROLLER:$JUJU_MODEL $tmp_dir --channel $JUJU_DEPLOY_BUNDLE_CHANNEL\"
+else
+   cmd=\"juju deploy -m $JUJU_CONTROLLER:$JUJU_MODEL $JUJU_DEPLOY_BUNDLE --channel $JUJU_DEPLOY_BUNDLE_CHANNEL\"
+fi
+
+$($cmd \"--overlay $JUJU_DEPLOY_OVERLAY\")
+
+juju config -m $JUJU_CONTROLLER:$JUJU_MODEL \"kubernetes-master allow-privileged=true\"
+juju config -m $JUJU_CONTROLLER:$JUJU_MODEL \"kubernetes-worker allow-privileged=true\"
+juju wait -e $JUJU_CONTROLLER:$JUJU_MODEL -v -w -r3 -t14400
 """
-bundle_channel = "edge"
-charm_channel = "edge"
-wait = true
+tags = ["juju-deploy"]
+
 
 [[Runner]]
 name = "Validating deployment"
-run = """
-#!/bin/bash
-set -eux
-
-pytest integration/validation.py --connection $JUJU_CONTROLLER:$JUJU_MODEL \
-                                 --cloud $JUJU_CLOUD \
-                                 --bundle-channel $JUJU_DEPLOY_BUNDLE_CHANNEL
+description = """
+Performs a full validation suite.
 """
-deps = ['pip:flaky>=3.6.0,<4',
-        'pip:pytest',
-        'pip:asyncio_extras',
-        'pip:pytest-asyncio',
-        'pip:juju',
-        'snap:juju/latest/candidate',
-        'snap:juju-wait/latest/stable']
+entry_point = ["pytest"]
+args = ["validations/tests/validation.py",
+        "--connection", "$JUJU_CONTROLLER:$JUJU_MODEL",
+        "--cloud", "$JUJU_CLOUD",
+        "--bundle-channel", "$JUJU_DEPLOY_BUNDLE_CHANNEL"]
 
 [[Runner]]
 name = "Tearing down deployment"
-run = """
-#!/bin/bash
-set -eux
-
-juju destroy-controller -y --destroy-all-models --destroy-storage $JUJU_CONTROLLER"
-"""
+entry_point = ["juju"]
+args = ["destroy-controller", "-y", "--destroy-all-models", "--destroy-storage", "$JUJU_CONTROLLER"]
+env_requires = ["JUJU_CONTROLLER"]
+tags = ["teardown"]
