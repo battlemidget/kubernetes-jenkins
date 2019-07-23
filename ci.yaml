@@ -27,11 +27,8 @@
     name: virtualenvwrapper
     builders:
       - shell: |
-          pip3 install --user virtualenvwrapper
-          pip3 install --user virtualenv
-          source ~/.local/bin/virtualenvwrapper.sh
-          mktmpenv -n
-          pip3 install -rrequirements.txt
+          #!/bin/bash -ex
+          /var/lib/jenkins/venvs/ci/bin/pip3 install -rrequirements.txt
 - builder:
     name: virtualenvwrapper-deactivate
     builders:

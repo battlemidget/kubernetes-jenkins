@@ -31,17 +31,21 @@
           #!/bin/bash
           set -eux
 
+          export VIRTUAL_ENV_DISABLE_PROMPT=1
+          . /var/lib/jenkins/venvs/ci/bin/activate
+          export PYTHONPATH=builders/snaps
+
+          export PATH=/var/lib/jenkins/venvs/ci/bin:$PATH
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"
           export SNAP_LIST="$SNAP_LIST"
           export K8STEAMCI_USR="$K8STEAMCI_USR"
           export K8STEAMCI_PSW="$K8STEAMCI_PSW"
-          # export LPCREDS="$LPCREDS"
+          export LPCREDS="$LPCREDS"
 
           echo $K8STEAMCI_USR
           echo $K8STEAMCI_PSW
 
-          ogc --spec builders/snaps/spec.toml \
-              --spec $WORKSPACE/deployment.toml plugin-deps --installable | sh -
-          ogc --spec builders/snaps/spec.toml \
-              --spec $WORKSPACE/deployment.toml --debug execute -t sync
+          pip install -rbuilders/snaps/requirements.txt
+          ogc --spec builders/snaps/spec.toml plugin-deps --installable
+          ogc --spec builders/snaps/spec.toml --debug execute -t sync
       - virtualenvwrapper-deactivate
