@@ -6,6 +6,21 @@ an environment that does not have access to the outside world.
 """
 
 [[Runner]]
+name = "Bootstrap juju and deploy ubuntu"
+description = """
+This will bootstrap and deploy ubuntu on aws with size constraints capable of holding an APT mirror
+"""
+run = """
+#!/bin/bash
+set -eux
+
+juju bootstrap aws/us-east-1 ogc-offline
+juju deploy ubuntu --constraints="root-disk=800G"
+juju-wait -e ogc-offline:default
+"""
+tags = ["deploy-host"]
+
+[[Runner]]
 name = "Setup APT mirror"
 description = "This sync's a Debian APT mirror. This should happen prior to isolating the cluster."
 run = """
@@ -13,28 +28,35 @@ run = """
 
 set -eux
 
-sudo tee /etc/apt/mirror.list > /dev/null <<EOL
-set nthreads     20
-set _tilde 0
+ssh_main="$(cat << 'EOF'
+   set -x
+   sudo apt update
+   sudo apt install -qyf apache2 apt-mirror simplestreams
+   sudo tee /etc/apt/mirror.list > /dev/null <<EOL
+       set nthreads     20
+       set _tilde 0
 
-deb http://archive.ubuntu.com/ubuntu bionic main restricted universe multiverse
-deb http://archive.ubuntu.com/ubuntu bionic-security main restricted universe multiverse
-deb http://archive.ubuntu.com/ubuntu bionic-updates main restricted universe multiverse
-deb http://archive.ubuntu.com/ubuntu bionic-backports main restricted universe multiverse
+       deb http://archive.ubuntu.com/ubuntu bionic main restricted universe multiverse
+       deb http://archive.ubuntu.com/ubuntu bionic-security main restricted universe multiverse
+       deb http://archive.ubuntu.com/ubuntu bionic-updates main restricted universe multiverse
+       deb http://archive.ubuntu.com/ubuntu bionic-backports main restricted universe multiverse
 
-deb-src http://archive.ubuntu.com/ubuntu bionic main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu bionic-security main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu bionic-updates main restricted universe multiverse
-deb-src http://archive.ubuntu.com/ubuntu bionic-backports main restricted universe multiverse
+       deb-src http://archive.ubuntu.com/ubuntu bionic main restricted universe multiverse
+       deb-src http://archive.ubuntu.com/ubuntu bionic-security main restricted universe multiverse
+       deb-src http://archive.ubuntu.com/ubuntu bionic-updates main restricted universe multiverse
+       deb-src http://archive.ubuntu.com/ubuntu bionic-backports main restricted universe multiverse
 
-clean http://archive.ubuntu.com/ubuntu
-EOL
+       clean http://archive.ubuntu.com/ubuntu
+   EOL
+   sudo apt-mirror
+   sudo a2ensite ubuntu-mirror.conf
+   sudo systemctl restart apache2
+EOF
+)"
 
-sudo apt-mirror
-sudo a2ensite ubuntu-mirror.conf
-sudo systemctl restart apache2
+juju ssh ubuntu/0 "$ssh_main"
+
 """
-deps = ["apt:apache2", "apt-mirror", "simplestreams"]
 tags = ["setup-apt-mirror"]
 
 [[Runner]]
@@ -44,20 +66,26 @@ run = """
 #!/bin/bash
 set -eux
 
-PRIMARYIP=`hostname -i`
-export REGISTRY=\"$PRIMARYIP:5000\"
 
-sudo tee /etc/docker/daemon.json > /dev/null <<EOL
-{
-  \"insecure-registries\": [\"$REGISTRY\"]
-}
-EOL
+ssh_main="$(cat << 'EOF'
+   set -x
+   sudo apt install -qyf docker.io
+   PRIMARYIP=`hostname -i`
+   export REGISTRY=\"$PRIMARYIP:5000\"
 
-sudo systemctl restart docker
-sudo docker run -d -p 5000:5000 --restart=always --name registry registry:2
+   sudo tee /etc/docker/daemon.json > /dev/null <<EOL
+   {
+     \"insecure-registries\": [\"$REGISTRY\"]
+   }
+   EOL
 
+   sudo systemctl restart docker
+   sudo docker run -d -p 5000:5000 --restart=always --name registry registry:2
+EOF
+)"
+
+juju ssh ubuntu/0 "$ssh_main"
 """
-deps = ['apt:docker.io']
 tags = ["setup-docker-registry"]
 
 [[Runner]]
@@ -136,7 +164,7 @@ tags = ["setup-docker-images"]
 [[Runner]]
 name = "Setup Squid Proxy"
 description = "Setup a squid proxy for offline use"
-run_script = "#!/bin/bash
+run_script = """#!/bin/bash
 git clone https://github.com/charmed-kubernetes/cdk-offline.git
 
 (
@@ -148,7 +176,7 @@ git clone https://github.com/charmed-kubernetes/cdk-offline.git
 [[Runner]]
 name = "Setup Squid Proxy"
 description = "Setup a squid proxy for offline use"
-run_script = "#!/bin/bash
+run_script = """#!/bin/bash
 git clone https://github.com/charmed-kubernetes/cdk-offline.git
 
 (
