@@ -5,6 +5,7 @@ Builds Kubernetes snaps from source
 """
 
 [Env]
+env_requires = ["PYTHONPATH"]
 deps = ["pip:builder/snaps/requirements.txt"]
 
 [[Runner]]
@@ -91,3 +92,17 @@ env_requires = ["PATCHES_LIST", "SNAP_LIST", "GIT_SSH_COMMAND", "K8STEAMCI_USR",
 entry_point = ["python3", "-m", "snap"]
 args = ["sync-upstream", "--snap-list", "$SNAP_LIST", "--force", "--patches", "$PATCHES_LIST"]
 tags = ["sync-with-patches"]
+
+[[Runner]]
+name = "Promote snaps"
+description = """
+Provides a way to promote snaps from a certain version/channel/track
+"""
+env_requires = ["SNAP_LIST", "SNAP_ARCH", "FROM_TRACK", "TO_TRACK"]
+entry_point = ["python3", "-m", "snap"]
+args = ["promote-snaps", "--snap-list", "$SNAP_LIST",
+                         "--arch", "$SNAP_ARCH",
+                         "--from-track", "$FROM_TRACK",
+                         "--to-track", "$TO_TRACK",
+                         "--exclude-pre"]
+tags = ["promote-snaps"]
