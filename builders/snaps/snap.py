@@ -70,19 +70,18 @@ def _sync_upstream(snap_list, starting_ver):
                         f"{_fmt_version_str}/edge",
                         f"{_fmt_version_str}/candidate",
                         f"{_fmt_version_str}/beta"]
-                for _track in tracks_to_publish:
-                    click.echo(f"Generating recipe for {snap}-{_fmt_version_str}")
-                    _create_snap_recipe(
-                        snap=snap,
-                        version=_fmt_version_str,
-                        track=_track,
-                        owner="k8s-jenkaas-admins",
-                        tag=snap_rel,
-                        repo=git_repo,
-                        dry_run=False,
-                        snap_recipe_email=os.environ.get("K8STEAMCI_USR"),
-                        snap_recipe_password=os.environ.get("K8STEAMCI_PSW"),
-                    )
+                click.echo(f"Generating recipe for {snap}-{_fmt_version_str}")
+                _create_snap_recipe(
+                    snap=snap,
+                    version=_fmt_version_str,
+                    track=tracks_to_publish,
+                    owner="k8s-jenkaas-admins",
+                    tag=snap_rel,
+                    repo=git_repo,
+                    dry_run=False,
+                    snap_recipe_email=os.environ.get("K8STEAMCI_USR"),
+                    snap_recipe_password=os.environ.get("K8STEAMCI_PSW"),
+                )
 
 
 @cli.command()
@@ -194,13 +193,16 @@ def _create_snap_recipe(
     _client = lp.Client(stage="production")
     _client.login()
 
+    if not isinstance(track, list):
+        track = [track]
+
     params = {
         "name": snap,
         "owner": owner,
         "version": version,
         "branch": tag,
         "repo": repo,
-        "track": [track],
+        "track": track,
     }
 
     click.echo(f"  > creating recipe for {params}")
