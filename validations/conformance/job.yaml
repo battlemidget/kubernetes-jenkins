@@ -7,48 +7,31 @@
       - k8s-jenkins-bm
     parameters:
       !include: global-parameters.yaml
-    # triggers:
-    #     - timed: "0 12 * * *"
     wrappers:
       - ansicolor
       - workspace-cleanup
     builders:
-      - virtualenvwrapper
       - shell: |-
           #!/bin/bash
           set -eux
-          cat <<- EOF > $WORKSPACE/deployment.toml
 
-          [Juju.bootstrap]
+          export VIRTUAL_ENV_DISABLE_PROMPT=1
+          export PYTHONPATH=validations/ck
 
-          constraints = "$JUJU_BOOTSTRAP_CONSTRAINTS"
-          debug = "$JUJU_BOOTSTRAP_DEBUG"
-          disable_add_model = false
+          . /var/lib/jenkins/venvs/ci/bin/activate
+          pip install -rrequirements.txt
+          pip install -rvalidations/conformance/requirements.txt
 
-          [Juju.deploy]
-
-          bundle = "$JUJU_DEPLOY_BUNDLE"
-          overlay = \"""
-          applications:
-            kubernetes-master:
-              options:
-                channel: $SNAP_VERSION
-            kubernetes-worker:
-              options:
-                channel: $SNAP_VERSION
-          """
-          wait = true
-          bundle_channel = "$JUJU_DEPLOY_BUNDLE_CHANNEL"
-          charm_channel = "$JUJU_DEPLOY_BUNDLE_CHANNEL"
-
-          [Juju.config]
-
-          set = ["kubernetes-master allow-privileged=true",
-                 "kubernetes-worker allow-privileged=true"]
-          EOF
+          export SNAP_VERSION="$SNAP_VERSION"
+          export JUJU_CONTROLLER="$JUJU_CONTROLLER"
+          export JUJU_MODEL="$JUJU_MODEL"
+          export JUJU_CLOUD="$JUJU_CLOUD"
+          export JUJU_DEPLOY_BUNDLE="$JUJU_DEPLOY_BUNDLE"
+          export JUJU_DEPLOY_BUNDLE_CHANNEL="$JUJU_DEPLOY_BUNDLE_CHANNEL"
+          export JUJU_DEPLOY_OVERLAY="$JUJU_DEPLOY_OVERLAY"
+          export JUJU_BOOTSTRAP_CONSTRAINTS="$JUJU_BOOTSTRAP_CONSTRAINTS"
+          export JUJU_BOOTSTRAP_DEBUG="$JUJU_BOOTSTRAP_DEBUG"
+          export JUJU_BOOTSTRAP_DISABLE_ADD_MODEL="$JUJU_BOOTSTRAP_DISABLE_ADD_MODEL"
 
           ogc --spec validations/conformance/spec.toml plugin-deps --installable | sh -
-          ogc --spec validations/conformance/spec.toml \
-              --spec $WORKSPACE/deployment.toml \
-              --debug execute
-      - virtualenvwrapper-deactivate
+          ogc --spec validations/conformance/spec.toml --debug execute

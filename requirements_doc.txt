@@ -1,0 +1,6 @@
+mkdocs==1.0.4
+mkdocs-material
+pygments
+pymdown-extensions
+python-frontmatter==0.4.5
+toml

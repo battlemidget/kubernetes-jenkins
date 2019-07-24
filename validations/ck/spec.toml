@@ -41,18 +41,33 @@ EOF
 
 RET=$?
 if [ $RET -eq 0 ]; then
-   tmp_dir=$(mktemp -d -t ogc-XXXXXX)
-   charm pull $JUJU_DEPLOY_BUNDLE --channel $JUJU_DEPLOY_BUNDLE_CHANNEL $tmp_dir
-   cmd=\"juju deploy -m $JUJU_CONTROLLER:$JUJU_MODEL $tmp_dir --channel $JUJU_DEPLOY_BUNDLE_CHANNEL\"
+   if [ -d \"$WORKSPACE/bundle\" ]; then
+      rm -rf $WORKSPACE/bundle
+   fi
+   charm pull $JUJU_DEPLOY_BUNDLE --channel $JUJU_DEPLOY_BUNDLE_CHANNEL $WORKSPACE/bundle 2>&1
+   cmd=\"juju deploy -m $JUJU_CONTROLLER:$JUJU_MODEL $WORKSPACE/bundle/bundle.yaml --channel $JUJU_DEPLOY_BUNDLE_CHANNEL\"
 else
    cmd=\"juju deploy -m $JUJU_CONTROLLER:$JUJU_MODEL $JUJU_DEPLOY_BUNDLE --channel $JUJU_DEPLOY_BUNDLE_CHANNEL\"
 fi
 
-$($cmd \"--overlay $JUJU_DEPLOY_OVERLAY\")
+cat <<- EOF > $WORKSPACE/bundle/overlay.yaml
+applications:
+  kubernetes-master:
+    options:
+      channel: $SNAP_VERSION
+  kubernetes-worker:
+    options:
+      channel: $SNAP_VERSION
+EOF
 
-juju config -m $JUJU_CONTROLLER:$JUJU_MODEL \"kubernetes-master allow-privileged=true\"
-juju config -m $JUJU_CONTROLLER:$JUJU_MODEL \"kubernetes-worker allow-privileged=true\"
-juju wait -e $JUJU_CONTROLLER:$JUJU_MODEL -v -w -r3 -t14400
+echo 'Deploying kubernetes'
+OUT=$($cmd --overlay $WORKSPACE/bundle/overlay.yaml 2>&1)
+echo $OUT
+OUT=$(juju config -m $JUJU_CONTROLLER:$JUJU_MODEL kubernetes-master allow-privileged=true 2>&1)
+echo $OUT
+OUT=$(juju config -m $JUJU_CONTROLLER:$JUJU_MODEL kubernetes-worker allow-privileged=true 2>&1)
+echo $OUT
+juju wait -e $JUJU_CONTROLLER:$JUJU_MODEL -v -w -r3 -t14400 2>&1
 """
 tags = ["juju-deploy"]
 
@@ -67,6 +82,7 @@ args = ["validations/tests/validation.py",
         "--connection", "$JUJU_CONTROLLER:$JUJU_MODEL",
         "--cloud", "$JUJU_CLOUD",
         "--bundle-channel", "$JUJU_DEPLOY_BUNDLE_CHANNEL"]
+tags = ["validate"]
 
 [[Runner]]
 name = "Tearing down deployment"

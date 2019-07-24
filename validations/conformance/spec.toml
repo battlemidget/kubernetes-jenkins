@@ -5,10 +5,10 @@ Verifies that CK passes CNCF conformance spec
 """
 
 [Env]
-requires = ["JUJU_MODEL",
-            "JUJU_CONTROLLER",
-            "JUJU_CLOUD",
-            "JUJU_DEPLOY_BUNDLE_CHANNEL"]
+env_requires = ["JUJU_MODEL",
+                "JUJU_CONTROLLER",
+                "JUJU_CLOUD",
+                "JUJU_DEPLOY_BUNDLE_CHANNEL"]
 
 deps = ["snap:juju/latest/candidate:classic",
         "snap:go/1.12/stable:classic",
@@ -70,7 +70,7 @@ run = """
 #!/bin/bash
 set -eux
 
-juju destroy-controller -y --destroy-all-models --destroy-storage $JUJU_CONTROLLER"
+juju destroy-controller -y --destroy-all-models --destroy-storage $JUJU_CONTROLLER
 """
 timeout = 180
 tags = ["teardown"]
