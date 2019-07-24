@@ -1,0 +1,19 @@
+[Info]
+name = "k8sci spec"
+description = "OGC Spec for generating documentation, running unittests, etc."
+
+[[Runner]]
+name = "Unittests"
+description = "Runs any unittests specific to the functioning of the scripts in ci"
+entry_point = ["pytest"]
+args = ["builders"]
+tags = ["test"]
+
+[[Runner]]
+name = "Docs"
+description = """
+Builds the site documentation, including a readme.
+"""
+entry_point = ["python3"]
+args = ['tools/docgen']
+tags = ['docs']

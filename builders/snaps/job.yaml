@@ -58,5 +58,5 @@
           echo $K8STEAMCI_PSW
 
           pip install -rbuilders/snaps/requirements.txt
-          ogc --spec builders/snaps/spec.toml plugin-deps --installable
+          ogc --spec builders/snaps/spec.toml plugin-deps --installable | sh -
           ogc --spec builders/snaps/spec.toml --debug execute -t "$TAG"

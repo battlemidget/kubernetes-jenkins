@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 from jinja2 import Template
 from pathlib import Path
 from pymacaroons import Macaroon
-import lp, idm, git
+import lp, idm, git, snapapi
 
 
 def _render(tmpl_file, context):
@@ -308,6 +308,54 @@ def create_snap_recipe(
         snap_recipe_password,
     )
 
+
+def _promote_snaps(snap_list, arch, from_track, to_track, exclude_pre, dry_run):
+    """ Promotes snaps from latest revision of version on architecture
+    """
+    snap_list = Path(snap_list)
+    if snap_list.exists():
+        snap_list = yaml.safe_load(snap_list.read_text(encoding="utf8"))
+    else:
+        snap_list = []
+    for snap in snap_list:
+        out = snapapi.latest(snap, from_track.split('/')[0], arch, exclude_pre)
+        if out:
+            rev, uploaded, arch, version, channels = out
+            for track in to_track:
+                click.echo(f"Promoting ({rev}) {snap} {version} -> {track}")
+                try:
+                    sh.snapcraft.release(snap, rev, track)
+                except sh.ErrorReturnCode as error:
+                    click.echo(f"Problem: {error}")
+                    sys.exit(1)
+
+
+@cli.command()
+@click.option("--snap-list", help="Path to supported snaps", required=True)
+@click.option("--arch", help="Architecture to use, amd64, arm64, ppc64le or s390x", required=True, default="amd64")
+@click.option("--from-track", required=True, help="Snap track to promote from")
+@click.option("--to-track", help="Snap track to promote to, format as: `[<track>/]<risk>[/<channel>]`", required=True, multiple=True)
+@click.option("--exclude-pre", is_flag=True, help="Do not count preleases when determining latest snap to promote")
+@click.option("--dry-run", is_flag=True)
+def promote_snaps(
+    snap_list,
+        arch,
+        from_track,
+    to_track,
+        exclude_pre,
+    dry_run,
+):
+    """ Provides a way to promote the latest snaps for a particular version and a particular architecture
+
+
+    Example:
+    > python3 snap.py  promote-snaps --snap-list k8s-snap-list.yaml \
+                                     --arch amd64 \
+                                     --from-track 1.15/edge \
+                                     --to-track 1.15/stable \
+                                     --exclude-pre
+    """
+    return _promote_snaps(snap_list, arch, from_track, to_track, exclude_pre, dry_run)
 
 if __name__ == "__main__":
     cli()
