@@ -2,6 +2,7 @@
 snaps-source.py - Building snaps from source and promoting them to snapstore
 
 """
+import sys
 import click
 import sh
 import os
@@ -10,6 +11,7 @@ import re
 import yaml
 import operator
 import semver
+import q
 from urllib.parse import urlparse
 from jinja2 import Template
 from pathlib import Path
@@ -29,7 +31,8 @@ def cli():
     pass
 
 
-def _sync_upstream(snap_list, starting_ver):
+@q
+def _sync_upstream(snap_list, starting_ver, force, patches, dry_run):
     """ Syncs the upstream k8s release tags with our snap branches
 
     Usage:
@@ -40,13 +43,13 @@ def _sync_upstream(snap_list, starting_ver):
     upstream_releases = git.remote_tags("https://github.com/kubernetes/kubernetes")
 
     for rel in upstream_releases:
-        _fmt_rel = rel[1:]
+        _fmt_rel = rel.lstrip("v")
         try:
             semver.parse(_fmt_rel)
             if semver.compare(_fmt_rel, starting_ver) >= 0:
                 supported_releases.append(rel)
-        except:
-            click.echo(f"Skipping invalid version: {rel}")
+        except ValueError as error:
+            click.echo(f"Skipping invalid {_fmt_rel}: {error}")
 
     snaps = yaml.safe_load(Path(snap_list).read_text(encoding="utf8"))
     for snap in snaps:
@@ -54,12 +57,12 @@ def _sync_upstream(snap_list, starting_ver):
         git_repo = f"git+ssh://cdkbot@git.launchpad.net/snap-{snap}"
         snap_releases = git.remote_branches(git_repo)
         if not set(supported_releases).issubset(set(snap_releases)):
-            _snap_releases = list(set(supported_releases).difference(set(snap_releases)))
-            _snap_releases.sort()
-            for snap_rel in _snap_releases:
+            snap_releases = list(set(supported_releases).difference(set(snap_releases)))
+            snap_releases.sort()
+            for snap_rel in snap_releases:
                 click.echo(f"Creating branch for {snap}-{snap_rel}")
-                _create_branch(git_repo, "master", snap_rel, dry_run=False)
-                _fmt_version = semver.parse(snap_rel[1:])
+                _create_branch(git_repo, "master", snap_rel, dry_run=False, force=force, patches=patches)
+                _fmt_version = semver.parse(snap_rel.lstrip("v"))
                 _fmt_version_str = f'{_fmt_version["major"]}.{_fmt_version["minor"]}'
                 tracks_to_publish = []
                 if _fmt_version['prerelease']:
@@ -71,17 +74,18 @@ def _sync_upstream(snap_list, starting_ver):
                         f"{_fmt_version_str}/candidate",
                         f"{_fmt_version_str}/beta"]
                 click.echo(f"Generating recipe for {snap}-{_fmt_version_str}")
-                _create_snap_recipe(
-                    snap=snap,
-                    version=_fmt_version_str,
-                    track=tracks_to_publish,
-                    owner="k8s-jenkaas-admins",
-                    tag=snap_rel,
-                    repo=git_repo,
-                    dry_run=False,
-                    snap_recipe_email=os.environ.get("K8STEAMCI_USR"),
-                    snap_recipe_password=os.environ.get("K8STEAMCI_PSW"),
-                )
+                if not dry_run:
+                    _create_snap_recipe(
+                        snap=snap,
+                        version=_fmt_version_str,
+                        track=tracks_to_publish,
+                        owner="k8s-jenkaas-admins",
+                        tag=snap_rel,
+                        repo=git_repo,
+                        dry_run=False,
+                        snap_recipe_email=os.environ.get("K8STEAMCI_USR"),
+                        snap_recipe_password=os.environ.get("K8STEAMCI_PSW"),
+                    )
 
 
 @cli.command()
@@ -92,11 +96,15 @@ def _sync_upstream(snap_list, starting_ver):
     required=True,
     default="1.13.7",
 )
-def sync_upstream(snap_list, starting_ver):
-    return _sync_upstream(snap_list, starting_ver)
+@click.option("--force", is_flag=True)
+@click.option("--patches", help="Path to patches list", required=False)
+@click.option("--dry-run", is_flag=True)
+def sync_upstream(snap_list, starting_ver, force, patches, dry_run):
+    return _sync_upstream(snap_list, starting_ver, force, patches, dry_run)
 
 
-def _create_branch(repo, from_branch, to_branch, dry_run):
+@q
+def _create_branch(repo, from_branch, to_branch, dry_run, force, patches):
     """ Creates a git branch based on the upstream snap repo and a version to branch as. This will also update
     the snapcraft.yaml with the correct version to build the snap from in that particular branch.
 
@@ -129,10 +137,34 @@ def _create_branch(repo, from_branch, to_branch, dry_run):
     if not snapcraft_fn_tpl.exists():
         click.echo(f"{snapcraft_fn_tpl} not found")
         sys.exit(1)
-    snapcraft_yml = snapcraft_fn_tpl.read_text()
-    snapcraft_yml = _render(snapcraft_fn_tpl, {"snap_version": to_branch.lstrip("v")})
-    snapcraft_fn.write_text(snapcraft_yml)
 
+    # Apply patches
+    patches_list = []
+    if patches:
+        patches_path = Path(patches)
+        if patches_path.exists():
+            click.echo("Patches found, applying.")
+            patches_map = yaml.safe_load(patches_path.read_text(encoding="utf8"))
+            # TODO: cleanup
+            if 'all' in patches_map:
+                for patch_fn in patches_map['all']:
+                    patch_fn = Path(patch_fn).absolute()
+                    shared_path = str(Path('shared') / patch_fn.parts[-1])
+                    sh.cp(str(patch_fn), str(shared_path), _cwd=snap_basename)
+                    patches_list.append(shared_path)
+                    sh.git.add(shared_path, _cwd=snap_basename)
+            if to_branch.lstrip("v") in patches_map:
+                for patch_fn in patches_map[to_branch.lstrip("v")]:
+                    patch_fn = Path(patch_fn).absolute()
+                    shared_path = str(Path('shared') / patch_fn.parts[-1])
+                    sh.cp(str(patch_fn), str(shared_path), _cwd=snap_basename)
+                    patches_list.append(shared_path)
+                    sh.git.add(shared_path, _cwd=snap_basename)
+
+    snapcraft_yml = snapcraft_fn_tpl.read_text()
+    snapcraft_yml = _render(snapcraft_fn_tpl, {"snap_version": to_branch.lstrip("v"),
+                                               "patches": patches_list})
+    snapcraft_fn.write_text(snapcraft_yml)
     if not dry_run:
         sh.git.add(".", _cwd=snap_basename)
         sh.git.commit("-m", f"Creating branch {to_branch}", _cwd=snap_basename)
@@ -152,8 +184,10 @@ def _create_branch(repo, from_branch, to_branch, dry_run):
     required=True,
 )
 @click.option("--dry-run", is_flag=True)
-def branch(repo, from_branch, to_branch, dry_run):
-    return _create_branch(repo, from_branch, to_branch, dry_run)
+@click.option("--force", is_flag=True)
+@click.option("--patches", help="Path to patches list", required=False)
+def branch(repo, from_branch, to_branch, dry_run, force, patches):
+    return _create_branch(repo, from_branch, to_branch, dry_run, force, patches)
 
 
 def _create_snap_recipe(

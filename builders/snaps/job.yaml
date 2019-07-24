@@ -12,6 +12,11 @@
       - string:
           name: SNAP_LIST
           default: builders/snaps/k8s-snap-list.yaml
+      - string:
+          name: PATCHES_LIST
+      - bool:
+          name: FORCE
+          default: false
     wrappers:
       - ansicolor
       - workspace-cleanup
@@ -30,6 +35,11 @@
           #!/bin/bash
           set -eux
 
+          TAG="sync"
+          if [ ! -z ${PATCHES_LIST+x} ]; then
+              TAG="sync-with-patches"
+          fi
+
           export VIRTUAL_ENV_DISABLE_PROMPT=1
           export PYTHONPATH=builders/snaps
 
@@ -39,6 +49,7 @@
           export PATH=/var/lib/jenkins/venvs/ci/bin:$PATH
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"
           export SNAP_LIST="$SNAP_LIST"
+          export PATCHES_LIST="$PATCHES_LIST"
           export K8STEAMCI_USR="$K8STEAMCI_USR"
           export K8STEAMCI_PSW="$K8STEAMCI_PSW"
           export LPCREDS="$LPCREDS"
@@ -48,4 +59,4 @@
 
           pip install -rbuilders/snaps/requirements.txt
           ogc --spec builders/snaps/spec.toml plugin-deps --installable
-          ogc --spec builders/snaps/spec.toml --debug execute -t sync
+          ogc --spec builders/snaps/spec.toml --debug execute -t "$TAG"

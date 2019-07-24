@@ -6,3 +6,4 @@ pyyaml==3.13
 requests>=2.22,<3.0
 semver>=2.8,<3.0
 sh>=1.12,<2.0
+q
