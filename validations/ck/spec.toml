@@ -20,7 +20,7 @@ controller = "$JUJU_CONTROLLER"
 model = "$JUJU_MODEL"
 
 [Juju.bootstrap]
-debug = true
+debug = false
 
 [Juju.deploy]
 reuse = false
@@ -44,7 +44,7 @@ entry_point = ["pytest"]
 args = ["validations/tests/validation.py",
         "--connection", "$JUJU_CONTROLLER:$JUJU_MODEL",
         "--cloud", "$JUJU_CLOUD",
-        "--bundle-channel", "$JUJU_DEPLOY_BUNDLE_CHANNEL",
+        "--bundle-channel", "$JUJU_DEPLOY_CHANNEL",
         "--snap-channel", "$SNAP_VERSION"]
 tags = ["validate"]
 fail_silently = true

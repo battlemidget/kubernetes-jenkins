@@ -165,18 +165,21 @@
 
           export VIRTUAL_ENV_DISABLE_PROMPT=1
           export PYTHONPATH="$JOB_SPEC_DIR"
-          export TMPDIR="$WORKSPACE/tmp"
-          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"
+          export GIT_SSH_COMMAND='"ssh -i $HOME/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"'
           export CHARM_BUILD_DIR="$WORKSPACE/${CHARM_BUILD_DIR:-build/charms}"
           export CHARM_LAYERS_DIR="$WORKSPACE/${CHARM_LAYERS_DIR:-build/layers}"
           export CHARM_INTERFACES_DIR="$WORKSPACE/${CHARM_INTERFACES_DIR:-build/interfaces}"
           export CHARM_CACHE_DIR=$WORKSPACE/tmp/.charm
-          export "PATH=/var/lib/jenkins/venvs/ci/bin:$PATH"
+          export PATH=/var/lib/jenkins/venvs/ci/bin:$PATH
+          export NODE_LABELS='"$NODE_LABELS"'
 
           env > $WORKSPACE/.env
 
           . /var/lib/jenkins/venvs/ci/bin/activate
           pip install -rrequirements.txt
+          pip install --upgrade https://github.com/battlemidget/ogc/archive/master.zip
+          pip install --upgrade https://github.com/battlemidget/ogc-plugins-runner/archive/master.zip
+          pip install --upgrade https://github.com/battlemidget/ogc-plugins-juju/archive/master.zip
 
 - builder:
     name: charm-build
@@ -187,13 +190,12 @@
           set -o allexport
           [[ -f $WORKSPACE/.env ]] && source $WORKSPACE/.env
           set +o allexport
-          #export $(egrep -v '^#' $WORKSPACE/.env | xargs -d '\n')
+
           . /var/lib/jenkins/venvs/ci/bin/activate
 
           rm -rf "$CHARM_BUILD_DIR" && mkdir -p "$CHARM_BUILD_DIR"
           rm -rf "$CHARM_LAYERS_DIR" && mkdir -p "$CHARM_LAYERS_DIR"
           rm -rf "$CHARM_INTERFACES_DIR" && mkdir -p "$CHARM_INTERFACES_DIR"
-          mkdir -p $TMPDIR
 
           pip install -r"$JOB_SPEC_DIR"/requirements.txt
           ogc --spec "$JOB_SPEC_DIR"/"$JOB_SPEC_FILE" --debug execute -t build-charms
@@ -205,7 +207,9 @@
       - shell: |-
           #!/bin/bash
           set -eux
-          export $(egrep -v '^#' $WORKSPACE/.env | xargs -d '\n')
+          set -o allexport
+          [[ -f $WORKSPACE/.env ]] && source $WORKSPACE/.env
+          set +o allexport
 
           . /var/lib/jenkins/venvs/ci/bin/activate
 
