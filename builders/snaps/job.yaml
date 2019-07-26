@@ -31,7 +31,7 @@
           set -eux
 
           TAG="sync"
-          if [ ! -z ${PATCHES_LIST+x} ]; then
+          if [ ! -z ${SNAP_PATCHES_LIST+x} ]; then
               TAG="sync-with-patches"
           fi
 
@@ -76,7 +76,7 @@
           set -eux
 
           TAG="sync"
-          if [ ! -z ${PATCHES_LIST+x} ]; then
+          if [ ! -z ${SNAP_PATCHES_LIST+x} ]; then
               TAG="sync-with-patches"
           fi
 

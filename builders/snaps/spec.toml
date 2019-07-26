@@ -22,7 +22,7 @@ long_description="""
 ## Environment
 
 - **SNAP_LIST**: *required*, This points to a yaml file containing the list of snaps we support. There is a list within this spec's directory: *k8s-snap-list.yaml* that can be referenced.
-- **PATCHES_LIST**: *optional*, This points to a yaml file containing the list patches to be applied prior to buiding the snap.
+- **SNAP_PATCHES_LIST**: *optional*, This points to a yaml file containing the list patches to be applied prior to buiding the snap.
 - **GIT_SSH_COMMAND**: *required*, Must point to a valid SSH key that will allow commits to the launchpad repos. The format for this can be `export GIT_SSH_COMMAND=\"ssh -i $HOME/.ssh/id_rsa -oStrictHostKeyChecking=no\"`
 - **K8STEAMCI_USR**: *required*, Launchpad user name that has access to the snap recipes for the kubernetes build.
 - **K8STEAMCI_PSW**: *required*, Launchpad password for user to access launchpad snap recipes.
@@ -89,9 +89,9 @@ args = [\"sync-upstream\",
 ```
 
 """
-env_requires = ["PATCHES_LIST", "SNAP_LIST", "GIT_SSH_COMMAND", "K8STEAMCI_USR", "K8STEAMCI_PSW"]
+env_requires = ["SNAP_PATCHES_LIST", "SNAP_LIST", "GIT_SSH_COMMAND", "K8STEAMCI_USR", "K8STEAMCI_PSW"]
 entry_point = ["python3", "-m", "snap"]
-args = ["sync-upstream", "--snap-list", "$SNAP_LIST", "--force", "--patches", "$PATCHES_LIST"]
+args = ["sync-upstream", "--snap-list", "$SNAP_LIST", "--force", "--patches", "$SNAP_PATCHES_LIST"]
 tags = ["sync-with-patches"]
 
 [[Runner]]

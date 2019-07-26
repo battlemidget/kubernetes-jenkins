@@ -11,7 +11,7 @@ env_requires = ["JUJU_CLOUD",
                 "JUJU_BOOTSTRAP_CONSTRAINTS",
                 "JUJU_CONTROLLER",
                 "JUJU_DEPLOY_BUNDLE",
-                "JUJU_DEPLOY_BUNDLE_CHANNEL",
+                "JUJU_DEPLOY_CHANNEL",
                 "JUJU_DEPLOY_OVERLAY",
                 "JUJU_MODEL",
                 "SNAP_VERSION"]

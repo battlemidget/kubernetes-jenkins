@@ -15,4 +15,12 @@
       - workspace-cleanup
     builders:
       - set-env
-      - ogc-execute-spec
+      - ogc-execute-spec:
+          SNAP_VERSION: '1.15/edge'
+          JUJU_DEPLOY_OVERLAY: 'overlays/1.15-edge-overlay.yaml'
+      - ogc-execute-spec:
+          SNAP_VERSION: '1.14/edge'
+          JUJU_DEPLOY_OVERLAY: 'overlays/1.14-edge-overlay.yaml'
+      - ogc-execute-spec:
+          SNAP_VERSION: '1.13/edge'
+          JUJU_DEPLOY_OVERLAY: 'overlays/1.13-edge-overlay.yaml'

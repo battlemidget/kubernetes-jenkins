@@ -43,9 +43,9 @@
           name: SNAP_LIST
           default: builders/snaps/k8s-snap-list.yaml
       - string:
-          name: PATCHES_LIST
+          name: SNAP_PATCHES_LIST
       - bool:
-          name: FORCE
+          name: SNAP_FORCE
           default: false
 
 - parameter:
@@ -90,8 +90,9 @@
           name: JUJU_DEPLOY_BUNDLE
           description: |
             The Juju bundle to deploy.
+          default: "cs:~containers/charmed-kubernetes"
       - string:
-          name: JUJU_DEPLOY_BUNDLE_CHANNEL
+          name: JUJU_DEPLOY_CHANNEL
           default: 'edge'
           description: |
             The Juju bundle channel to deploy from (ie, stable, candidate, beta, edge).
@@ -160,16 +161,19 @@
           #!/bin/bash
           set -eux
 
+          rm -rf $WORKSPACE/.env || true
+
           export VIRTUAL_ENV_DISABLE_PROMPT=1
           export PYTHONPATH="$JOB_SPEC_DIR"
-          export CHARM_BUILD_DIR="$WORKSPACE/$CHARM_BUILD_DIR"
-          export CHARM_LAYERS_DIR="$WORKSPACE/$CHARM_LAYERS_DIR"
-          export CHARM_INTERFACES_DIR="$WORKSPACE/$CHARM_INTERFACES_DIR"
           export TMPDIR="$WORKSPACE/tmp"
-          export CHARM_CACHE_DIR=$TMPDIR/.charm
           export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"
-          export PATH=/var/lib/jenkins/venvs/ci/bin:$PATH
-          env > $WORKSPACE/build-env.properties
+          export CHARM_BUILD_DIR="$WORKSPACE/${CHARM_BUILD_DIR:-build/charms}"
+          export CHARM_LAYERS_DIR="$WORKSPACE/${CHARM_LAYERS_DIR:-build/layers}"
+          export CHARM_INTERFACES_DIR="$WORKSPACE/${CHARM_INTERFACES_DIR:-build/interfaces}"
+          export CHARM_CACHE_DIR=$WORKSPACE/tmp/.charm
+          export "PATH=/var/lib/jenkins/venvs/ci/bin:$PATH"
+
+          env > $WORKSPACE/.env
 
           . /var/lib/jenkins/venvs/ci/bin/activate
           pip install -rrequirements.txt
@@ -180,6 +184,10 @@
       - shell: |-
           #!/bin/bash
           set -eux
+          set -o allexport
+          [[ -f $WORKSPACE/.env ]] && source $WORKSPACE/.env
+          set +o allexport
+          #export $(egrep -v '^#' $WORKSPACE/.env | xargs -d '\n')
           . /var/lib/jenkins/venvs/ci/bin/activate
 
           rm -rf "$CHARM_BUILD_DIR" && mkdir -p "$CHARM_BUILD_DIR"
@@ -197,6 +205,7 @@
       - shell: |-
           #!/bin/bash
           set -eux
+          export $(egrep -v '^#' $WORKSPACE/.env | xargs -d '\n')
 
           . /var/lib/jenkins/venvs/ci/bin/activate
 

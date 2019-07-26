@@ -1,4 +1,4 @@
-# Core validation test for CK
+# Bugfix release
 
 - job:
     name: 'ogc-release-bugfix'
