@@ -15,7 +15,7 @@ from sh import juju_wait
 
 
 def _model_from_env():
-    return os.environ.get("MODEL") or "validate-{}".format(os.environ["BUILD_NUMBER"])
+    return os.environ.get("MODEL", "jenkins-ci-model")
 
 
 def _controller_from_env():

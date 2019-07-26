@@ -1,17 +1,18 @@
 [Info]
-name = "Validate CK on supported releases"
+name = "Validate CK with Calico"
 description = """
-Runs validation test suite against a vanilla deployment of Charmed Kubernetes
+Runs validation test suite against a vanilla deployment of Charmed Kubernetes with Calico
 """
 
 [Juju]
-name = "Setup Juju"
-description = "Verify required environment variables exist and configure Juju for deployment"
 env_requires = ["JUJU_CLOUD",
                 "JUJU_BOOTSTRAP_CONSTRAINTS",
+                "JUJU_BOOTSTRAP_DEBUG",
+                "JUJU_BOOTSTRAP_DISABLE_ADD_MODEL",
                 "JUJU_CONTROLLER",
                 "JUJU_DEPLOY_BUNDLE",
                 "JUJU_DEPLOY_BUNDLE_CHANNEL",
+                "JUJU_DEPLOY_OVERLAY",
                 "JUJU_MODEL",
                 "SNAP_VERSION"]
 cloud = "$JUJU_CLOUD"
@@ -19,21 +20,38 @@ controller = "$JUJU_CONTROLLER"
 model = "$JUJU_MODEL"
 
 [Juju.bootstrap]
-debug = true
+run = """
+#!/bin/bash
+python3 validations/tests/tigera/cleanup_vpcs.py
+CONTROLLER=$JUJU_CONTROLLER validations/tests/tigera/bootstrap_aws_single_subnet.py
+"""
 
 [Juju.deploy]
-reuse = false
 bundle = "$JUJU_DEPLOY_BUNDLE"
 overlay = "$JUJU_DEPLOY_OVERLAY"
 bundle_channel = "$JUJU_DEPLOY_BUNDLE_CHANNEL"
 charm_channel = "$JUJU_DEPLOY_BUNDLE_CHANNEL"
-wait = true
+wait = false
 
 [Juju.config]
 # Config options to pass to a deployed application
 # ie, juju config -m controller:model kubernetes-master allow-privileged=true
-set = ["kubernetes-master allow-privileged=true",
-       "kubernetes-worker allow-privileged=true"]
+set = ["kubernetes-master = allow-privileged=true",
+       "kubernetes-worker = allow-privileged=true"]
+
+[[Runner]]
+name = "Disable source dest check"
+description = "No idea"
+entry_point = ["python3"]
+args = ["integration/tigera/disable_source_dest_check.py",
+        "-m", "$JUJU_CONTROLLER:$JUJU_MODEL"]
+
+[[Runner]]
+name = "Juju wait"
+description = "wait for settle"
+entry_point = ["juju-wait"]
+args = ["-e", "$JUJU_CONTROLLER:$JUJU_MODEL", "-w"]
+
 
 [[Runner]]
 name = "Validating deployment"
@@ -44,8 +62,7 @@ entry_point = ["pytest"]
 args = ["validations/tests/validation.py",
         "--connection", "$JUJU_CONTROLLER:$JUJU_MODEL",
         "--cloud", "$JUJU_CLOUD",
-        "--bundle-channel", "$JUJU_DEPLOY_BUNDLE_CHANNEL",
-        "--snap-channel", "$SNAP_VERSION"]
+        "--bundle-channel", "$JUJU_DEPLOY_BUNDLE_CHANNEL"]
 tags = ["validate"]
 fail_silently = true
 
@@ -54,4 +71,12 @@ name = "Tearing down deployment"
 description = "Tearing down all deployed applications"
 entry_point = ["juju"]
 args = ["destroy-controller", "-y", "--destroy-all-models", "--destroy-storage", "$JUJU_CONTROLLER"]
+env_requires = ["JUJU_CONTROLLER"]
 tags = ["teardown"]
+
+[[Runner]]
+name = "Cleanup vpcs"
+description = "Destroy AWS vpcs"
+entry_point = ["python3"]
+args = ["validations/tests/tigera/cleanup_vpcs.py"]
+tags = ["cleanup-vpcs"]

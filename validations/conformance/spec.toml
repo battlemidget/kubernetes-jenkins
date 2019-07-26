@@ -65,12 +65,8 @@ tags = ["cncf", "cncf-download-results"]
 
 [[Runner]]
 name = "Tearing down deployment"
-description = "Tear down juju"
-run = """
-#!/bin/bash
-set -eux
-
-juju destroy-controller -y --destroy-all-models --destroy-storage $JUJU_CONTROLLER
-"""
-timeout = 180
+description = "Tearing down all deployed applications"
+entry_point = ["juju"]
+args = ["destroy-controller", "-y", "--destroy-all-models", "--destroy-storage", "$JUJU_CONTROLLER"]
+env_requires = ["JUJU_CONTROLLER"]
 tags = ["teardown"]
