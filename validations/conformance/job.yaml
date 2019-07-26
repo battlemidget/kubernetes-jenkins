@@ -6,16 +6,11 @@
     scm:
       - k8s-jenkins-bm
     parameters:
-      !include: global-juju-parameters.yaml
+      - global-params
+      - juju-params
     wrappers:
       - ansicolor
       - workspace-cleanup
     builders:
       - set-env
-      - shell: |-
-          #!/bin/bash
-          set -eux
-          . /var/lib/jenkins/venvs/ci/bin/activate
-
-          ogc --spec "$JOB_SPEC_DIR"/"$JOB_SPEC_FILE" plugin-deps --installable | sh -
-          ogc --spec "$JOB_SPEC_DIR"/"$JOB_SPEC_FILE" --debug execute
+      - ogc-execute-spec

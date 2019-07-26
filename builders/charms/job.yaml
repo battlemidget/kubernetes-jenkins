@@ -7,7 +7,8 @@
     scm:
       - k8s-jenkins-bm
     parameters:
-      !include: global-charm-build-parameters.yaml
+      - global-params
+      - charm-params
     triggers:
         - timed: "0 18 * * *"
     wrappers:

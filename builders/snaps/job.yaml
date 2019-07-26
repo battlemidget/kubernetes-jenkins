@@ -9,15 +9,8 @@
     scm:
       - k8s-jenkins-bm
     parameters:
-      !include: global-parameters.yaml
-      - string:
-          name: SNAP_LIST
-          default: builders/snaps/k8s-snap-list.yaml
-      - string:
-          name: PATCHES_LIST
-      - bool:
-          name: FORCE
-          default: false
+      - global-params
+      - snap-params
     wrappers:
       - ansicolor
       - workspace-cleanup
@@ -55,10 +48,8 @@
     scm:
       - k8s-jenkins-bm
     parameters:
-      !include: global-parameters.yaml
-      - string:
-          name: SNAP_LIST
-          default: builders/snaps/k8s-snap-list.yaml
+      - global-params
+      - snap-params
       - string:
           name: TO_TRACK
       - string:
