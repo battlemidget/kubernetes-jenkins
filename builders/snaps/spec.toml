@@ -5,7 +5,8 @@ Builds Kubernetes snaps from source
 """
 
 [Env]
-env_requires = ["PYTHONPATH"]
+name = "Snap environment setup"
+description = "Setup snap environment"
 deps = ["pip:builder/snaps/requirements.txt"]
 
 [[Runner]]

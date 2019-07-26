@@ -1,9 +1,0 @@
-click>=7.0.0,<8.0.0
-jinja2>=2.10,<3.0
-launchpadlib==1.10.6
-ogc>=0.1.5,<1.0.0
-pyyaml==3.13
-requests>=2.22,<3.0
-semver>=2.8,<3.0
-sh>=1.12,<2.0
-q

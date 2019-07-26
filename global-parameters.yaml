@@ -1,52 +1,10 @@
 # Global parameters that can be injected in jobs
-#
-# Note: Please add to this list for options that are generally useful for most
-# job runs
 - string:
-    name: SNAP_VERSION
+    name: JOB_SPEC_DIR
     description: |
-      Version of Kubernetes to test against, in the form of
-      <major>.<minor>/<channel> (ie, 1.16/edge).
+      Path to the directory that houses the calling spec.toml
 - string:
-    name: JUJU_CONTROLLER
-    default: 'validate-ck'
+    name: JOB_SPEC_FILE
     description: |
-      The Juju controller to create and reference during run.
-- string:
-    name: JUJU_MODEL
-    default: 'validate'
-    description: |
-      The Juju model to create and reference during run.
-- string:
-    name: JUJU_CLOUD
-    default: 'aws/us-east-2'
-    description: |
-      The Juju cloud to create and reference during run.
-- string:
-    name: JUJU_BOOTSTRAP_CONSTRAINTS
-    description: |
-      Juju bootstrap constraints (ie, 'arch=amd64')
-- bool:
-    name: JUJU_BOOTSTRAP_DEBUG
-    default: false
-    description: |
-      Juju bootstrap with debugging output.
-- bool:
-    name: JUJU_BOOTSTRAP_DISABLE_ADD_MODEL
-    default: false
-    description: |
-      Disable creating JUJU_MODEL after bootstrap. Useful if model
-      configuration changes need to take place prior.
-- string:
-    name: JUJU_DEPLOY_BUNDLE
-    description: |
-      The Juju bundle to deploy.
-- string:
-    name: JUJU_DEPLOY_BUNDLE_CHANNEL
-    default: 'edge'
-    description: |
-      The Juju bundle channel to deploy from (ie, stable, candidate, beta, edge).
-- string:
-    name: JUJU_DEPLOY_OVERLAY
-    description: |
-      Path to a YAML overlay bundle fragment
+      Name of the spec file, defaults to `spec.toml`
+    default: spec.toml

@@ -1,12 +1,12 @@
-# Core validation test for CK
+# Core validation test for CK w/ Calico
 
 - job:
-    name: 'ogc-validate-ck'
+    name: 'ogc-validate-ck-ceph'
     project-type: freestyle
     scm:
       - k8s-jenkins-bm
     parameters:
-      !include: global-parameters.yaml
+      !include: global-juju-parameters.yaml
     triggers:
         - timed: "@daily"
     wrappers:
@@ -17,22 +17,7 @@
           #!/bin/bash
           set -eux
 
-          export VIRTUAL_ENV_DISABLE_PROMPT=1
-          export PYTHONPATH=validations/ck
-
           . /var/lib/jenkins/venvs/ci/bin/activate
-          pip install -rrequirements.txt
 
-          export SNAP_VERSION="$SNAP_VERSION"
-          export JUJU_CONTROLLER="$JUJU_CONTROLLER"
-          export JUJU_MODEL="$JUJU_MODEL"
-          export JUJU_CLOUD="$JUJU_CLOUD"
-          export JUJU_DEPLOY_BUNDLE="$JUJU_DEPLOY_BUNDLE"
-          export JUJU_DEPLOY_BUNDLE_CHANNEL="$JUJU_DEPLOY_BUNDLE_CHANNEL"
-          export JUJU_DEPLOY_OVERLAY="$JUJU_DEPLOY_OVERLAY"
-          export JUJU_BOOTSTRAP_CONSTRAINTS="$JUJU_BOOTSTRAP_CONSTRAINTS"
-          export JUJU_BOOTSTRAP_DEBUG="$JUJU_BOOTSTRAP_DEBUG"
-          export JUJU_BOOTSTRAP_DISABLE_ADD_MODEL="$JUJU_BOOTSTRAP_DISABLE_ADD_MODEL"
-
-          ogc --spec validations/ck/spec.toml plugin-deps --installable | sh -
-          ogc --spec validations/ck/spec.toml --debug execute
+          ogc --spec "$JUJU_SPEC_DIR"/"$JUJU_SPEC_FILE" plugin-deps --installable | sh -
+          ogc --spec "$JUJU_SPEC_DIR"/"$JUJU_SPEC_FILE" --debug execute

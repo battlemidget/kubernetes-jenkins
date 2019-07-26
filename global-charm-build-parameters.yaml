@@ -36,3 +36,21 @@
     description: |
       Filter the builds by tag (ie. k8s). A tag can also be the name of a
       charm you want to individually build.
+- string:
+    name: CHARM_BUILD_DIR
+    default: 'build/charms'
+- string:
+    name: CHARM_LAYERS_DIR
+    default: 'build/layers'
+- string:
+    name: CHARM_INTERFACES_DIR
+    default: 'build/interfaces'
+- string:
+    name: JOB_SPEC_DIR
+    description: |
+      Path to the directory that houses the calling spec.toml
+- string:
+    name: JOB_SPEC_FILE
+    description: |
+      Name of the spec file, defaults to `spec.toml`
+    default: spec.toml

@@ -7,6 +7,7 @@ Builds the charms and bundles that make up the Charmed Kubernetes deployment.
 [Env]
 name = "Env"
 description = "This sets up the environment"
+properties_file = "build-env.properties"
 deps = ["pip:requirements.txt", "snap:charm/latest/edge:classic", "apt:docker.io"]
 
 [[Runner]]
