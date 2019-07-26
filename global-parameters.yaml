@@ -46,7 +46,7 @@
     default: 'edge'
     description: |
       The Juju bundle channel to deploy from (ie, stable, candidate, beta, edge).
-- text:
+- string:
     name: JUJU_DEPLOY_OVERLAY
     description: |
-      YAML bundle overlay blob, this will merge left over existing key:val
+      Path to a YAML overlay bundle fragment

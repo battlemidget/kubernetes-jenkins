@@ -1,14 +1,12 @@
-# Core validation test for CK w/ Calico
+# Core validation test for CK
 
 - job:
-    name: 'ogc-validate-ck-calico'
+    name: 'ogc-release-bugfix'
     project-type: freestyle
     scm:
       - k8s-jenkins-bm
     parameters:
       !include: global-parameters.yaml
-    triggers:
-        - timed: "@daily"
     wrappers:
       - ansicolor
       - workspace-cleanup
@@ -18,7 +16,7 @@
           set -eux
 
           export VIRTUAL_ENV_DISABLE_PROMPT=1
-          export PYTHONPATH=validations/ck
+          export PYTHONPATH=validations/ck:builders/charms
 
           . /var/lib/jenkins/venvs/ci/bin/activate
           pip install -rrequirements.txt
@@ -34,5 +32,5 @@
           export JUJU_BOOTSTRAP_DEBUG="$JUJU_BOOTSTRAP_DEBUG"
           export JUJU_BOOTSTRAP_DISABLE_ADD_MODEL="$JUJU_BOOTSTRAP_DISABLE_ADD_MODEL"
 
-          ogc --spec validations/ck-calico/spec.toml plugin-deps --installable | sh -
-          ogc --spec validations/ck-calico/spec.toml --debug execute
+          ogc --spec validations/ck/spec.toml plugin-deps --installable | sh -
+          ogc --spec validations/ck/spec.toml --debug execute

@@ -1,7 +1,7 @@
-# Core validation test for CK w/ Calico
+# Core validation test for CK
 
 - job:
-    name: 'ogc-validate-ck-calico'
+    name: 'ogc-validate-ck'
     project-type: freestyle
     scm:
       - k8s-jenkins-bm
@@ -34,5 +34,5 @@
           export JUJU_BOOTSTRAP_DEBUG="$JUJU_BOOTSTRAP_DEBUG"
           export JUJU_BOOTSTRAP_DISABLE_ADD_MODEL="$JUJU_BOOTSTRAP_DISABLE_ADD_MODEL"
 
-          ogc --spec validations/ck-calico/spec.toml plugin-deps --installable | sh -
-          ogc --spec validations/ck-calico/spec.toml --debug execute
+          ogc --spec validations/ck/spec.toml plugin-deps --installable | sh -
+          ogc --spec validations/ck/spec.toml --debug execute
