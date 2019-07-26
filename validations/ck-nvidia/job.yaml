@@ -1,8 +1,8 @@
-# Core validation test for CK w/ Calico
+# Core validation test for CK w/ NVidia
 
 - job:
     name: 'ogc-validate-ck-nvidia'
-    project-type: freestyle
+    project-type: pipeline
     scm:
       - k8s-jenkins-bm
     parameters:
@@ -13,6 +13,8 @@
     wrappers:
       - ansicolor
       - workspace-cleanup
-    builders:
-      - set-env
-      - ogc-execute-spec
+    dsl: |
+      build job: "ogc-validate-ck",
+           parameters: [string(name:'JUJU_DEPLOY_BUNDLE', value: ${params.JUJU_DEPLOY_BUNDLE}),
+                        string(name:'JUJU_DEPLOY_OVERLAY', value: 'overlays/nvidia-overlay.yaml'),
+                        string(name:'SNAP_VERSION', value: ${params.SNAP_VERSION}]

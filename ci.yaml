@@ -35,6 +35,13 @@
           description: |
             Name of the spec file, defaults to `spec.toml`
           default: spec.toml
+      - string:
+          name: RUN_ID
+          description: |
+            This should be a uniquely identifiable run tag so that
+            subsequent runs can query any previous state if available. This
+            allows passing jobs to be bypassed and only the failed job be run
+            again.
 
 - parameter:
     name: snap-params
@@ -47,6 +54,14 @@
       - bool:
           name: SNAP_FORCE
           default: false
+
+- parameter:
+    name: test-params
+    parameters:
+      - string:
+          name: TEST_HARNESS
+          description: |
+            Path to a pytest compatible file to be processed.
 
 - parameter:
     name: juju-params
@@ -161,6 +176,9 @@
           #!/bin/bash
           set -eux
 
+          # Login to snapstore
+          snapcraft login --with /var/lib/jenkins/snapcraft-creds
+
           rm -rf $WORKSPACE/.env || true
 
           export VIRTUAL_ENV_DISABLE_PROMPT=1
@@ -176,9 +194,10 @@
           env > $WORKSPACE/.env
 
           . /var/lib/jenkins/venvs/ci/bin/activate
-          pip install -rrequirements.txt
+          # pip install -rrequirements.txt
           pip install --upgrade https://github.com/battlemidget/ogc/archive/master.zip
           pip install --upgrade https://github.com/battlemidget/ogc-plugins-runner/archive/master.zip
+          pip install --upgrade https://github.com/battlemidget/ogc-plugins-env/archive/master.zip
           pip install --upgrade https://github.com/battlemidget/ogc-plugins-juju/archive/master.zip
 
 - builder:

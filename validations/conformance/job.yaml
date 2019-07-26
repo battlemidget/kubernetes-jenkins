@@ -1,7 +1,7 @@
 # Core validation test for CK
 
 - job:
-    name: 'conformance'
+    name: 'ogc-conformance'
     project-type: freestyle
     scm:
       - k8s-jenkins-bm

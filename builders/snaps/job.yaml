@@ -64,9 +64,6 @@
               credential-id: k8s_team_ci_lp
               username: K8STEAMCI_USR
               password: K8STEAMCI_PSW
-          - file:
-              credential-id: launchpad_creds
-              variable: LPCREDS
     triggers:
         - timed: "@daily"
     builders:
@@ -74,13 +71,4 @@
       - shell: |-
           #!/bin/bash
           set -eux
-
-          TAG="sync"
-          if [ ! -z ${SNAP_PATCHES_LIST+x} ]; then
-              TAG="sync-with-patches"
-          fi
-
-          . /var/lib/jenkins/venvs/ci/bin/activate
-
-          ogc --spec "$JOB_SPEC_DIR"/"$JOB_SPEC_FILE" plugin-deps --installable | sh -
-          ogc --spec "$JOB_SPEC_DIR"/"$JOB_SPEC_FILE" --debug execute -t "$TAG"
+          ogc --spec "$JOB_SPEC_DIR"/"$JOB_SPEC_FILE" --debug execute -t promote-snaps

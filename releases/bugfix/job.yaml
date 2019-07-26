@@ -2,15 +2,36 @@
 
 - job:
     name: 'ogc-release-bugfix'
-    project-type: freestyle
+    description: |
+      Promote, Validate, Release to stable. This job will run through all
+      necessary steps to validate a particular version of k8s and make sure the
+      charms and snaps are published accordingly.
+    project-type: pipeline
     scm:
       - k8s-jenkins-bm
     parameters:
       - global-params
       - juju-params
+      - string:
+          name: BUGFIX_TEST_UPGRADE_RANGE
+          default: 'v1.13.x-v1.14.x'
+          description: |
+            The previous version to upgrade and test from, format should be
+            'v1.13.x-v1.14.x'
+      - string:
+          name: CHARM_PROMOTE_TO
+          default: 'beta'
+          description: |
+            In the format of 'beta candidate'
+    dsl: |
+      build job: "ogc-build-charms-bundles",
+           parameters: [string(name:'LAYER_BRANCH', value: ${params.LAYER_BRANCH}),
+                        string(name:'TO_CHANNEL', value: ${params.CHARM_PROMOTE_TO})]
+      build job: "ogc-conformance",
+           parameters: [string(name:'JUJU_CLOUD', value: ${params.JUJU_CLOUD}),
+                        string(name:'JUJU_DEPLOY_CHANNEL', value: ${params.CHARM_PROMOTE_TO})
+                        string(name:'JUJU_DEPLOY_OVERLAY', value: ${params.JUJU_DEPLOY_OVERLAY})]
+
     wrappers:
       - ansicolor
       - workspace-cleanup
-    builders:
-      - set-env
-      - ogc-execute-spec

@@ -2,17 +2,16 @@
 
 - job:
     name: 'ogc-validate-ck-calico'
-    project-type: freestyle
+    project-type: pipeline
     scm:
       - k8s-jenkins-bm
     parameters:
       - global-params
-      - juju-params
     triggers:
         - timed: "@daily"
     wrappers:
       - ansicolor
       - workspace-cleanup
-    builders:
-      - set-env
-      - ogc-execute-spec
+    dsl: |
+      build job: "ogc-validate-ck",
+           parameters: [string(name:'JUJU_DEPLOY_BUNDLE', value: 'kubernetes-calico')]

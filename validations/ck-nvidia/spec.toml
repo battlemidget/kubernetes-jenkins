@@ -1,57 +1,5 @@
 [Info]
-name = "Validate CK on supported releases"
+name = "Validate CK with NVidia"
 description = """
-Runs validation test suite against a vanilla deployment of Charmed Kubernetes
+Runs validation test suite against a vanilla deployment of Charmed Kubernetes with NVidia capable hardware.
 """
-
-[Juju]
-name = "Setup Juju"
-description = "Verify required environment variables exist and configure Juju for deployment"
-env_requires = ["JUJU_CLOUD",
-                "JUJU_BOOTSTRAP_CONSTRAINTS",
-                "JUJU_CONTROLLER",
-                "JUJU_DEPLOY_BUNDLE",
-                "JUJU_DEPLOY_BUNDLE_CHANNEL",
-                "JUJU_DEPLOY_OVERLAY",
-                "JUJU_MODEL",
-                "SNAP_VERSION"]
-cloud = "$JUJU_CLOUD"
-controller = "$JUJU_CONTROLLER"
-model = "$JUJU_MODEL"
-
-[Juju.bootstrap]
-debug = true
-
-[Juju.deploy]
-reuse = false
-bundle = "$JUJU_DEPLOY_BUNDLE"
-overlay = "$JUJU_DEPLOY_OVERLAY"
-channel = "$JUJU_DEPLOY_CHANNEL"
-wait = true
-
-[Juju.config]
-# Config options to pass to a deployed application
-# ie, juju config -m controller:model kubernetes-master allow-privileged=true
-set = ["kubernetes-master allow-privileged=true",
-       "kubernetes-worker allow-privileged=true"]
-
-[[Runner]]
-name = "Validating deployment"
-description = """
-Performs a full validation suite.
-"""
-entry_point = ["pytest"]
-args = ["validations/tests/validation.py",
-        "--connection", "$JUJU_CONTROLLER:$JUJU_MODEL",
-        "--cloud", "$JUJU_CLOUD",
-        "--bundle-channel", "$JUJU_DEPLOY_BUNDLE_CHANNEL",
-        "--snap-channel", "$SNAP_VERSION"]
-tags = ["validate"]
-fail_silently = true
-
-[[Runner]]
-name = "Tearing down deployment"
-description = "Tearing down all deployed applications"
-entry_point = ["juju"]
-args = ["destroy-controller", "-y", "--destroy-all-models", "--destroy-storage", "$JUJU_CONTROLLER"]
-tags = ["teardown"]

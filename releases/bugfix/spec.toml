@@ -1,57 +1,32 @@
 [Info]
-name = "Validate CK on supported releases"
+name = "Performs a Kubernetes bugfix release"
 description = """
-Runs validation test suite against a vanilla deployment of Charmed Kubernetes
+Performs a Kubernetes bugfix release, which includes validation across the base
+deployment as well as variations including calico, tigera, vault, nvidia, and
+ceph.
 """
+long_description = """
+# Bugfix Release Process
 
-[Juju]
-name = "Setup Juju"
-description = "Verify required environment variables exist and configure Juju for deployment"
-env_requires = ["JUJU_CLOUD",
-                "JUJU_BOOTSTRAP_CONSTRAINTS",
-                "JUJU_CONTROLLER",
-                "JUJU_DEPLOY_BUNDLE",
-                "JUJU_DEPLOY_BUNDLE_CHANNEL",
-                "JUJU_DEPLOY_OVERLAY",
-                "JUJU_MODEL",
-                "SNAP_VERSION"]
-cloud = "$JUJU_CLOUD"
-controller = "$JUJU_CONTROLLER"
-model = "$JUJU_MODEL"
+## Steps
 
-[Juju.bootstrap]
-debug = true
-
-[Juju.deploy]
-reuse = false
-bundle = "$JUJU_DEPLOY_BUNDLE"
-overlay = "$JUJU_DEPLOY_OVERLAY"
-channel = "$JUJU_DEPLOY_CHANNEL"
-wait = true
-
-[Juju.config]
-# Config options to pass to a deployed application
-# ie, juju config -m controller:model kubernetes-master allow-privileged=true
-set = ["kubernetes-master allow-privileged=true",
-       "kubernetes-worker allow-privileged=true"]
-
-[[Runner]]
-name = "Validating deployment"
-description = """
-Performs a full validation suite.
+1. Cherry-pick fixes from edge into stable branches
+2. Build new charms from those stable branches
+3. Promote built bundles/charms into the charmstores beta channel
+4. Notify solutions-qa to start their test harness
+5. Run validation against 'vanilla' Charmed Kubernetes
+6. Run validation against variations
+   6a. NVidia
+   6b. Tigera EE
+   6c. Calico
+   6d. Vault
+   6e. Ceph
+7. Run an upgrade from previous minor release
+8. Run validation against that upgrade
+9. Document release notes
+   9a. Bugfixes
+   9b. Enhancements
+   9c. Known Limitations/Issues
+10. Promote to charmstore stable branches
+11. Send announcement to k8s-crew
 """
-entry_point = ["pytest"]
-args = ["validations/tests/validation.py",
-        "--connection", "$JUJU_CONTROLLER:$JUJU_MODEL",
-        "--cloud", "$JUJU_CLOUD",
-        "--bundle-channel", "$JUJU_DEPLOY_BUNDLE_CHANNEL",
-        "--snap-channel", "$SNAP_VERSION"]
-tags = ["validate"]
-fail_silently = true
-
-[[Runner]]
-name = "Tearing down deployment"
-description = "Tearing down all deployed applications"
-entry_point = ["juju"]
-args = ["destroy-controller", "-y", "--destroy-all-models", "--destroy-storage", "$JUJU_CONTROLLER"]
-tags = ["teardown"]

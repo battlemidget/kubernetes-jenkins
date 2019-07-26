@@ -2,7 +2,7 @@
 
 - job:
     name: 'ogc-validate-ck-ceph'
-    project-type: freestyle
+    project-type: pipeline
     scm:
       - k8s-jenkins-bm
     parameters:
@@ -13,6 +13,6 @@
     wrappers:
       - ansicolor
       - workspace-cleanup
-    builders:
-      - set-env
-      - ogc-execute-spec
+    dsl: |
+      build job: "ogc-validate-ck",
+           parameters: [string(name:'JUJU_DEPLOY_BUNDLE', value: ${params.JUJU_DEPLOY_BUNDLE})]
