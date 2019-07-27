@@ -30,8 +30,6 @@ channel = "$JUJU_DEPLOY_CHANNEL"
 wait = true
 
 [Juju.config]
-# Config options to pass to a deployed application
-# ie, juju config -m controller:model kubernetes-master allow-privileged=true
 set = ["kubernetes-master allow-privileged=true",
        "kubernetes-worker allow-privileged=true"]
 

@@ -31,7 +31,6 @@
            parameters: [string(name:'JUJU_CLOUD', value: ${params.JUJU_CLOUD}),
                         string(name:'JUJU_DEPLOY_CHANNEL', value: ${params.CHARM_PROMOTE_TO})
                         string(name:'JUJU_DEPLOY_OVERLAY', value: ${params.JUJU_DEPLOY_OVERLAY})]
-
     wrappers:
       - ansicolor
       - workspace-cleanup
