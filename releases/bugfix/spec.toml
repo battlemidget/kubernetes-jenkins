@@ -50,6 +50,12 @@ This job takes a tag, from_channel, and to_channel. The tag defaults to `k8s` so
 it will only promote the necessary charms that make up charmed-kuberneetes (the
 others are kubeflow related).
 
+### Promote bundles from `beta` to `candidate` and `stable`
+
+**Job**: https://jenkins.canonical.com/k8s/job/promote-bundles/
+
+Same as charm promotion.
+
 ### Send announcement to k8s-crew with any relevant information.
 """
 
