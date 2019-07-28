@@ -2,6 +2,31 @@
 name = "k8sci spec"
 description = "OGC Spec for generating documentation, running unittests, etc."
 
+[SpecDoc]
+name = "Docs"
+file_glob = "**/*spec.toml"
+top_level_dir = "."
+tags = ["docs"]
+
+[[Runner]]
+name = "Build and serve locally"
+run = """
+#!/bin/bash
+
+mkdocs serve
+"""
+tags = ["docs"]
+
+[[Runner]]
+name = "Build and publish docs"
+run = """
+#!/bin/bash
+
+mkdocs build
+aws s3 sync site/ s3://jenkaas/docs
+"""
+tags = ["docs-deploy"]
+
 [[Runner]]
 name = "Unittests"
 description = "Runs any unittests specific to the functioning of the scripts in ci"
@@ -9,11 +34,3 @@ entry_point = ["pytest"]
 args = ["builders"]
 tags = ["test"]
 
-[[Runner]]
-name = "Docs"
-description = """
-Builds the site documentation, including a readme.
-"""
-entry_point = ["python3"]
-args = ['tools/docgen']
-tags = ['docs']

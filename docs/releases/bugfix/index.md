@@ -1,11 +1,10 @@
-[Info]
-name = "Creating a bugfix release"
-description = """
+# Creating a bugfix release
+
 Performs a Kubernetes bugfix release, which includes validation across the base
 deployment as well as variations including calico, tigera, vault, nvidia, and
 ceph.
-"""
-long_description = """
+
+
 ## Bugfix Release Process
 
 ### Cherry-pick fixes from master into stable branches
@@ -51,7 +50,5 @@ it will only promote the necessary charms that make up charmed-kuberneetes (the
 others are kubeflow related).
 
 ### Send announcement to k8s-crew with any relevant information.
-"""
 
-[Info.mkdocs]
-destination = "releases/bugfix/index.md"
+

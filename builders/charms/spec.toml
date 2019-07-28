@@ -1,8 +1,11 @@
 [Info]
-name = "Builds the charms and bundles"
+name = "Build charms and bundles"
 description = """
 Builds the charms and bundles that make up the Charmed Kubernetes deployment.
 """
+
+[Info.mkdocs]
+destination = "builders/charms/index.md"
 
 [Env]
 name = "Env"

@@ -1,32 +1,26 @@
-[Info]
-name = "Builds snaps"
-description = """
+# Builds snaps
+
 Builds Kubernetes snaps from source
-"""
 
-[Info.mkdocs]
-destination = "builders/snaps/index.md"
 
-[Env]
-name = "Snap environment setup"
-description = "Setup snap environment"
-deps = ["pip:builder/snaps/requirements.txt"]
+## Steps
+### Snap environment setup
 
-[[Runner]]
-name = "Sync K8s snaps"
-description = """
+Setup snap environment
+
+### Sync K8s snaps
+
 Pull down upstream release tags and make sure our launchpad git repo has those
 tags synced. Next, we push any new releases (major, minor, or patch) to the
 launchpad builders for building the snaps from source and uploading to the snap
 store.
-"""
-long_description="""
+
 
 ### Environment
 
 - **SNAP_LIST**: *required*, This points to a yaml file containing the list of snaps we support. There is a list within this spec's directory: *k8s-snap-list.yaml* that can be referenced.
 - **SNAP_PATCHES_LIST**: *optional*, This points to a yaml file containing the list patches to be applied prior to buiding the snap.
-- **GIT_SSH_COMMAND**: *required*, Must point to a valid SSH key that will allow commits to the launchpad repos. The format for this can be `export GIT_SSH_COMMAND=\"ssh -i $HOME/.ssh/id_rsa -oStrictHostKeyChecking=no\"`
+- **GIT_SSH_COMMAND**: *required*, Must point to a valid SSH key that will allow commits to the launchpad repos. The format for this can be `export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_rsa -oStrictHostKeyChecking=no"`
 - **K8STEAMCI_USR**: *required*, Launchpad user name that has access to the snap recipes for the kubernetes build.
 - **K8STEAMCI_PSW**: *required*, Launchpad password for user to access launchpad snap recipes.
 
@@ -35,30 +29,24 @@ long_description="""
 ### Running
 
 ```
-export GIT_SSH_COMMAND=\"ssh -i $HOME/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no\"
-export SNAP_LIST=\"$SNAP_LIST\"
-export K8STEAMCI_USR=\"$K8STEAMCI_USR\"
-export K8STEAMCI_PSW=\"$K8STEAMCI_PSW\"
+export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/cdkbot_rsa -oStrictHostKeyChecking=no"
+export SNAP_LIST="$SNAP_LIST"
+export K8STEAMCI_USR="$K8STEAMCI_USR"
+export K8STEAMCI_PSW="$K8STEAMCI_PSW"
 
 ogc --spec builders/snaps/spec.toml plugin-deps --installable | sh -
 ogc --spec builders/snaps/spec.toml --debug execute -t sync
 ```
-"""
-env_requires = ["SNAP_LIST", "GIT_SSH_COMMAND", "K8STEAMCI_USR", "K8STEAMCI_PSW"]
-entry_point = ["python3", "-m", "snap"]
-args = ["sync-upstream", "--snap-list", "$SNAP_LIST"]
-tags = ["sync"]
 
 
-[[Runner]]
-name = "Sync K8s snaps - with patches"
-description = """
+### Sync K8s snaps - with patches
+
 Pull down upstream release tags and make sure our launchpad git repo has those
 tags synced. Next, we push any new releases (major, minor, or patch) to the
 launchpad builders for building the snaps from source and uploading to the snap
 store.
-"""
-long_description="""
+
+
 ### Patches
 
 In addition to building the snaps, this provides the ability to patch the core
@@ -81,29 +69,17 @@ all:
 
 Then in the args section, pass the path to the above yaml file:
 ```toml
-args = [\"sync-upstream\",
-        \"--snap-list\",
-        \"$SNAP_LIST\",
-        \"--force\",
-        \"--patches\", \"builders/snaps/patches.yaml\"]
+args = ["sync-upstream",
+        "--snap-list",
+        "$SNAP_LIST",
+        "--force",
+        "--patches", "builders/snaps/patches.yaml"]
 ```
 
-"""
-env_requires = ["SNAP_PATCHES_LIST", "SNAP_LIST", "GIT_SSH_COMMAND", "K8STEAMCI_USR", "K8STEAMCI_PSW"]
-entry_point = ["python3", "-m", "snap"]
-args = ["sync-upstream", "--snap-list", "$SNAP_LIST", "--force", "--patches", "$SNAP_PATCHES_LIST"]
-tags = ["sync-with-patches"]
 
-[[Runner]]
-name = "Promote snaps"
-description = """
+
+### Promote snaps
+
 Provides a way to promote snaps from a certain version/channel/track
-"""
-env_requires = ["SNAP_LIST", "SNAP_ARCH", "FROM_TRACK", "TO_TRACK"]
-entry_point = ["python3", "-m", "snap"]
-args = ["promote-snaps", "--snap-list", "$SNAP_LIST",
-                         "--arch", "$SNAP_ARCH",
-                         "--from-track", "$FROM_TRACK",
-                         "--to-track", "$TO_TRACK",
-                         "--exclude-pre"]
-tags = ["promote-snaps"]
+
+

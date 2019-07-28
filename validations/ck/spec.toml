@@ -1,8 +1,11 @@
 [Info]
-name = "Validate CK on supported releases"
+name = "Validate Charmed Kubernetes"
 description = """
 Runs validation test suite against a vanilla deployment of Charmed Kubernetes
 """
+
+[Info.mkdocs]
+destination = "validations/ck/index.md"
 
 [Juju]
 name = "Setup Juju"

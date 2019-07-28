@@ -4,6 +4,9 @@ description = """
 Verifies that CK passes CNCF conformance spec
 """
 
+[Info.mkdocs]
+destination = "validations/conformance/index.md"
+
 [Env]
 env_requires = ["JUJU_MODEL",
                 "JUJU_CONTROLLER",
