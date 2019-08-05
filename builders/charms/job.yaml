@@ -16,4 +16,6 @@
       - workspace-cleanup
     builders:
       - set-env
-      - charm-build
+      - charm-build:
+          JOB_SPEC_DIR: "builders/charms"
+          JOB_SPEC_FILE: "spec.toml"

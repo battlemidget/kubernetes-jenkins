@@ -21,4 +21,5 @@
         - timed: "@daily"
     builders:
       - set-env
-      - ogc-execute-spec
+      - ogc-execute-spec:
+          JOB_SPEC_DIR: "maintenance/sync-upstream"

@@ -36,6 +36,10 @@
             Name of the spec file, defaults to `spec.toml`
           default: spec.toml
       - string:
+          name: JOB_TAGS
+          description: |
+            Specific tags of the spec to run, in the format of '-t run-test -t run-build'.
+      - string:
           name: RUN_ID
           description: |
             This should be a uniquely identifiable run tag so that
@@ -216,7 +220,6 @@
           rm -rf "$CHARM_LAYERS_DIR" && mkdir -p "$CHARM_LAYERS_DIR"
           rm -rf "$CHARM_INTERFACES_DIR" && mkdir -p "$CHARM_INTERFACES_DIR"
 
-          pip install -r"$JOB_SPEC_DIR"/requirements.txt
           ogc --spec "$JOB_SPEC_DIR"/"$JOB_SPEC_FILE" --debug execute -t build-charms
           ogc --spec "$JOB_SPEC_DIR"/"$JOB_SPEC_FILE" --debug execute -t build-bundles
 

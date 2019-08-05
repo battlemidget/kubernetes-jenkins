@@ -1,4 +1,4 @@
-# Core validation test for CK w/ Calico
+# Core validation test for CK prev stable to current stable
 
 - job:
     name: 'ogc-validate-ck-upgrade'
@@ -15,4 +15,7 @@
       - workspace-cleanup
     builders:
       - set-env
-      - ogc-execute-spec
+      - ogc-execute-spec:
+          JOB_SPEC_DIR: "validations/ck"
+          SNAP_VERSION: '1.15/edge'
+          JUJU_DEPLOY_OVERLAY: 'overlays/1.14-stable-overlay.yaml'
