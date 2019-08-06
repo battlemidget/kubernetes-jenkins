@@ -10,12 +10,9 @@ tags = ["docs"]
 
 [[Runner]]
 name = "Build and serve locally"
-run = """
-#!/bin/bash
-
-mkdocs serve
-"""
-tags = ["docs"]
+entry_point = ["mkdocs"]
+args = ["serve"]
+tags = ["docs-serve"]
 
 [[Runner]]
 name = "Build and publish docs"
