@@ -94,7 +94,7 @@
       ignore_errors: yes
       loop:
         - "lxd"
-        - "juju --classic --candidate"
+        - "juju --classic --channel latest/stable"
         - "juju-wait --classic"
         - "kubectl --classic"
         - "charm --classic --edge"
