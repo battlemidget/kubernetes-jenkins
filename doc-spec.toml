@@ -16,6 +16,13 @@ Ability to create a virtualenv, install `virtualenvwrapper` from the archives.
 > pip install -rrequirements_doc.txt
 > ogc --spec maintainer-spec.toml --debug execute -t docs && mkdocs serve
 ```
+
+### Bootstrapping in dev mode
+
+```
+juju bootstrap aws/us-east-2 aws-dev --config test-mode=true
+juju model-defaults test-mode=true
+```
 """
 
 [Info.mkdocs]
