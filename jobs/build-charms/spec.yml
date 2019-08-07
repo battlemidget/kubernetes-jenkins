@@ -1,5 +1,7 @@
 plan:
-  - charm:
+  - charmstore:
+      description: |
+        Builds the charms that make up Kubernetes
       env-requires:
         - CHARM_BUILD_DIR
         - CHARM_LAYERS_DIR
@@ -29,7 +31,9 @@ plan:
           --layer-list "$LAYER_LIST" \
           --layer-branch "$LAYER_BRANCH"
       tags = [build-charms]
-  - bundle:
+  - charmstore:
+      description: |
+        Buildes the bundles that make up Kubernetes
       env-requires:
         - FILTER_BY_TAG
         - BUNDLE_LIST
