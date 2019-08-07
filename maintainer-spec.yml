@@ -4,19 +4,29 @@ meta:
     OGC Spec for generating documentation, running unittests, etc.
 
 plan:
-  runner:
-    description: Run unittests
-    cmd: pytest
-  specdoc:
-    description: |
-      Generates the markdown content from spec files
-    file-glob: **/*spec.yml
-    top-level-dir: .
-  mkdocs:
-    description: Builds and serve the documentation locally
-    cmd: mkdocs build && mkdocs serve
+  - runner:
+      description: Run unittests
+      cmd: pytest jobs
+      tags: [test]
+  - specdoc:
+      description: |
+        Generates the markdown content from spec files
+      file-glob: jobs/**/*spec.yml
+      top-level-dir: .
+      tags: [build-specs, build-docs]
+  - runner:
+      description: Builds docs
+      cmd: mkdocs build
+      tags: [build-docs]
+  - runner:
+      description: Deploys documentation
+      script: |
+        #!/bin/bash
+        set -eux
+        aws s3 sync site/ s3://jenkaas/docs
+      tags: [deploy-docs]
 
-publish:
-  S3:
-    src: site/
-    dst: s3://jenkaas/docs
+# publish:
+#   S3:
+#     src: site/
+#     dst: s3://jenkaas/docs

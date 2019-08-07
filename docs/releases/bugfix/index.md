@@ -1,14 +1,14 @@
 # Creating a bugfix release
-
 Performs a Kubernetes bugfix release, which includes validation across the base
 deployment as well as variations including calico, tigera, vault, nvidia, and
 ceph.
 
-
 ## Bugfix Release Process
 
 ### Cherry-pick fixes from master into stable branches
+
 ### Document release notes
+
 - Bugfixes
 - Enhancements
 - Known Limitations/Issues
@@ -29,8 +29,8 @@ This is the main job to run when needing to do a bugfix. The steps this build pe
     - Ceph
 
 **Note**: Keep up with the `release_id` as that will need to be referenced in
-  case the job needs to be re-run due to build errors. Simply hitting `Rebuild`
-  on the Jenkins job page will have that ID prepopulated.
+case the job needs to be re-run due to build errors. Simply hitting `Rebuild`
+on the Jenkins job page will have that ID prepopulated.
 
 ### Validate a minor upgrade
 
@@ -56,5 +56,4 @@ others are kubeflow related).
 Same as charm promotion.
 
 ### Send announcement to k8s-crew with any relevant information.
-
 

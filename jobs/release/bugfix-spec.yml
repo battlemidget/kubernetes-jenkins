@@ -1,8 +1,7 @@
 meta:
   mkdocs:
     destination:
-      - "docs/releases/bugfix/index.md"
-      - "jobs/release/readme-bugfix.md"
+      - "releases/bugfix/index.md"
   name: Creating a bugfix release
   description: |
     Performs a Kubernetes bugfix release, which includes validation across the base
