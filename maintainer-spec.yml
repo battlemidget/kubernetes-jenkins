@@ -1,0 +1,22 @@
+meta:
+  name: k8s ci maintainer spec
+  description: |
+    OGC Spec for generating documentation, running unittests, etc.
+
+plan:
+  runner:
+    description: Run unittests
+    cmd: pytest
+  specdoc:
+    description: |
+      Generates the markdown content from spec files
+    file-glob: **/*spec.yml
+    top-level-dir: .
+  mkdocs:
+    description: Builds and serve the documentation locally
+    cmd: mkdocs build && mkdocs serve
+
+publish:
+  S3:
+    src: site/
+    dst: s3://jenkaas/docs

@@ -235,4 +235,4 @@
 
           . /var/lib/jenkins/venvs/ci/bin/activate
 
-          ogc --spec "$JOB_SPEC_DIR"/"$JOB_SPEC_FILE" --debug execute
+          ogc --spec "$JOB_SPEC_DIR"/"$JOB_SPEC_FILE" --debug execute "$JOB_TAGS"

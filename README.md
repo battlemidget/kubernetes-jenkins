@@ -16,11 +16,11 @@ To build the docs do the following:
 > mkvirtualenv k8s
 > pip install -rrequirements.txt
 > pip install -rrequirements_doc.txt
-> ogc --spec maintainer-spec.toml --debug execute -t docs
+> ogc --spec maintainer-spec.yml --debug execute --phase plan
 ```
 
 To deploy documentation (requires AWS credentials):
 
 ```
-> ogc --spec maintainer-spec.toml --debug execute -t docs-deploy
+> ogc --spec maintainer-spec.yml execute --phase publish
 ```
