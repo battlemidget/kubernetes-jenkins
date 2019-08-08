@@ -4,6 +4,11 @@ meta:
     OGC Spec for generating documentation, running unittests, etc.
 
 plan:
+  - env:
+      deps:
+        - "pip:requirements_dev.txt"
+        - "snap:aws-cli/latest/stable:classic"
+
   - runner:
       description: Run unittests
       cmd: pytest jobs
@@ -25,8 +30,8 @@ plan:
         set -eux
         aws s3 sync site/ s3://jenkaas/docs
       tags: [deploy-docs]
-
-# publish:
-#   S3:
+      deps:
+        - "snap:aws-cli/latest/stable:classic"
+# - publish-s3:
 #     src: site/
 #     dst: s3://jenkaas/docs
