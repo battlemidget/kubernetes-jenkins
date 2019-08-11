@@ -64,7 +64,6 @@
           - wget
           - tree
           - virtualenv
-          - virtualenvwrapper
           - jq
       tags:
         - jenkins

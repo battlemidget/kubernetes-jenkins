@@ -1,0 +1,74 @@
+# Build snaps
+
+- job:
+    name: 'ogc-build-snaps'
+    description: |
+      Sync all release tags from upstream, then create snap recipes to be built
+      and promoted into the snap store.
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-bm
+    parameters:
+      - global-params
+      - snap-params
+    wrappers:
+      - ansicolor
+      - workspace-cleanup
+      - credentials-binding:
+          - username-password-separated:
+              credential-id: k8s_team_ci_lp
+              username: K8STEAMCI_USR
+              password: K8STEAMCI_PSW
+          - file:
+              credential-id: launchpad_creds
+              variable: LPCREDS
+    triggers:
+        - timed: "@daily"
+    builders:
+      - set-env
+      - shell: |-
+          #!/bin/bash
+          set -eux
+
+          TAG="sync"
+          if [ ! -z ${{SNAP_PATCHES_LIST+x}} ]; then
+              TAG="sync-with-patches"
+          fi
+
+          . /var/lib/jenkins/venvs/ci/bin/activate
+
+          ogc --spec builders/snaps/spec.toml plugin-deps --installable | sh -
+          ogc --spec builders/snaps/spec.toml --debug execute -t "$TAG"
+
+- job:
+    name: 'ogc-promote-snaps'
+    description: |
+      Performs a snap promotion
+    project-type: freestyle
+    scm:
+      - k8s-jenkins-bm
+    parameters:
+      - global-params
+      - snap-params
+      - string:
+          name: TO_TRACK
+      - string:
+          name: FROM_TRACK
+      - string:
+          name: SNAP_ARCH
+    wrappers:
+      - ansicolor
+      - workspace-cleanup
+      - credentials-binding:
+          - username-password-separated:
+              credential-id: k8s_team_ci_lp
+              username: K8STEAMCI_USR
+              password: K8STEAMCI_PSW
+    triggers:
+        - timed: "@daily"
+    builders:
+      - set-env
+      - shell: |-
+          #!/bin/bash
+          set -eux
+          ogc --spec builders/snaps/spec.toml --debug execute -t promote-snaps
