@@ -1,4 +1,0 @@
-name = "Validate CK on supported releases"
-description = """
-Runs validation test suite against a vanilla deployment of Charmed Kubernetes
-"""

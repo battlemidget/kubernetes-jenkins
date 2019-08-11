@@ -3,7 +3,7 @@
 #
 
 - job-template:
-    name: 'conformance-{k8sver}-{bundle}-s390x'
+    name: 'conformance-{k8sver}-s390x'
     description: |
       CNCF Conformance testing for Kubernetes {k8sver} {bundle} on s390x.
 
@@ -31,14 +31,14 @@
           default: 'edge'
       - string:
           name: bundle
-          default: '{bundle}'
+          default: 'charmed-kubernetes'
     properties:
       - build-discarder:
           num-to-keep: 7
 
 
 - job-template:
-    name: 'cncf-{k8sver}-{bundle}'
+    name: 'conformance-{k8sver}'
     description: |
       CNCF Conformance testing for Kubernetes {k8sver} {bundle}.
 
@@ -48,27 +48,8 @@
       scm:
         - k8s-jenkins-jenkaas
     parameters:
-      - string:
-          name: build_node
-          default: 'runner-amd64'
-      - string:
-          name: version_overlay
-          default: '{version_overlay}'
-      - string:
-          name: model
-          default: 'conformance'
-      - string:
-          name: controller
-          default: 'cncf'
-      - string:
-          name: cloud
-          default: 'aws/us-east-2'
-      - string:
-          name: bundle_channel
-          default: 'edge'
-      - string:
-          name: bundle
-          default: '{bundle}'
+      - global-params
+      - juju-params
     properties:
       - build-discarder:
           num-to-keep: 7
@@ -79,25 +60,16 @@
           timeout: 240
           fail: true
     builders:
-      - shell: |-
-          #!/bin/bash
-          set -eux
-          juju bootstrap ${cloud} ${controller}-$(uuid | cut -f1 -d-)
-          juju add-model ${controller} ${model}-$(uuid | cut -f1 -d-)
-
-- job-group:
-    name: 'conformance'
-    k8sver:
-      !include: includes/k8s-support-matrix.inc
-    jobs:
-      - 'conformance-{k8sver}-{bundle}':
-          bundle:
-            - 'charmed-kubernetes'
-      - 'conformance-{k8sver}-{bundle}-s390x':
-          bundle:
-            - 'charmed-kubernetes'
+      - set-env:
+          JOB_SPEC_DIR: "jobs/cncf-conformance"
+      - ogc-execute-spec:
+          JOB_SPEC_DIR: "jobs/cncf-conformance"
+          JOB_SPEC_FILE: "spec.yml"
 
 - project:
     name: conformance
+    k8sver:
+      !include: includes/k8s-support-matrix.inc
     jobs:
-      - 'conformance'
+      - 'conformance-{k8sver}'
+      - 'conformance-{k8sver}-s390x'
