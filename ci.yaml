@@ -46,6 +46,16 @@
             subsequent runs can query any previous state if available. This
             allows passing jobs to be bypassed and only the failed job be run
             again.
+      - choice:
+          name: BUILD_NODE
+          description: |
+            List of Jenkins nodes for performing tests
+          choices:
+            - runner-amd64-1
+            - runner-amd64-2
+            - runner-ppc64le
+            - runner-s390x
+            - runner-arm64
 
 - parameter:
     name: snap-params

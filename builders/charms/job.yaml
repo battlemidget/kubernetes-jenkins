@@ -7,7 +7,6 @@
     scm:
       - k8s-jenkins-bm
     parameters:
-      - global-params
       - charm-params
     triggers:
         - timed: "0 18 * * *"
@@ -17,5 +16,5 @@
     builders:
       - set-env
       - charm-build:
-          JOB_SPEC_DIR: "builders/charms"
-          JOB_SPEC_FILE: "spec.toml"
+          JOB_SPEC_DIR: "jobs/build-charms"
+          JOB_SPEC_FILE: "spec.yml"
