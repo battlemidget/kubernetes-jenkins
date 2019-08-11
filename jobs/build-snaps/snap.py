@@ -1,5 +1,5 @@
 """
-snaps-source.py - Building snaps from source and promoting them to snapstore
+snap.py - Building snaps from source and promoting them to snapstore
 
 """
 import sys
@@ -11,12 +11,11 @@ import re
 import yaml
 import operator
 import semver
-import q
 from urllib.parse import urlparse
 from jinja2 import Template
 from pathlib import Path
 from pymacaroons import Macaroon
-import lp, idm, git, snapapi
+from .lib import lp, idm, git, snapapi
 
 
 def _render(tmpl_file, context):
@@ -31,7 +30,6 @@ def cli():
     pass
 
 
-@q
 def _sync_upstream(snap_list, starting_ver, force, patches, dry_run):
     """ Syncs the upstream k8s release tags with our snap branches
 
@@ -103,7 +101,6 @@ def sync_upstream(snap_list, starting_ver, force, patches, dry_run):
     return _sync_upstream(snap_list, starting_ver, force, patches, dry_run)
 
 
-@q
 def _create_branch(repo, from_branch, to_branch, dry_run, force, patches):
     """ Creates a git branch based on the upstream snap repo and a version to branch as. This will also update
     the snapcraft.yaml with the correct version to build the snap from in that particular branch.
@@ -112,7 +109,7 @@ def _create_branch(repo, from_branch, to_branch, dry_run, force, patches):
 
     Usage:
 
-    snaps-source.py branch --repo git+ssh://lp_git_user@git.launchpad.net/snap-kubectl \
+    snap.py branch --repo git+ssh://lp_git_user@git.launchpad.net/snap-kubectl \
       --from-branch master \
       --to-branch 1.13.2
     """
@@ -216,7 +213,7 @@ def _create_snap_recipe(
 
     Usage:
 
-    snaps-source.py builder --snap kubectl --version 1.13 --tag v1.13.2 \
+    snap.py create-snap-recipe --snap kubectl --version 1.13 --tag v1.13.2 \
       --track 1.13/edge/hotfix-LP123456 \
       --repo git+ssh://$LPCREDS@git.launchpad.net/snap-kubectl \
       --owner k8s-jenkaas-admins \
@@ -349,11 +346,11 @@ def promote_snaps(
 
 
     Example:
-    > python3 snap.py  promote-snaps --snap-list k8s-snap-list.yaml \
-                                     --arch amd64 \
-                                     --from-track 1.15/edge \
-                                     --to-track 1.15/stable \
-                                     --exclude-pre
+    > snap.py promote-snaps --snap-list k8s-snap-list.yaml \
+                            --arch amd64 \
+                            --from-track 1.15/edge \
+                            --to-track 1.15/stable \
+                            --exclude-pre
     """
     return _promote_snaps(snap_list, arch, from_track, to_track, exclude_pre, dry_run)
 
