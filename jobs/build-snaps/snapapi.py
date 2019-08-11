@@ -1,18 +1,16 @@
 import sh
 import re
 import operator
-import q
 import semver
 from pprint import pformat
 
-@q
+
 def max_rev(revlist, version_filter):
     return max([int(sublist[0])
                 for sublist in revlist
                 if sublist[-2].startswith(version_filter)
     ])
 
-@q
 def revisions(snap, version_filter, arch="amd64", exclude_pre=False):
     """ Get revisions of snap
 
@@ -43,7 +41,6 @@ def revisions(snap, version_filter, arch="amd64", exclude_pre=False):
     return []
 
 
-@q
 def latest(snap, version, arch="amd64", exclude_pre=False):
     """ Get latest snap revision
     """

@@ -357,5 +357,24 @@ def promote_snaps(
     """
     return _promote_snaps(snap_list, arch, from_track, to_track, exclude_pre, dry_run)
 
+
+@cli.command()
+@click.option("--name", required=True, help="Snap name to release")
+@click.option("--channel", required=True, help="Snapstore channel to release to")
+@click.option("--version", required=True, help="Snap application version to release")
+@click.option("--dry-run", is_flag=True)
+def release(name, channel, version, dry_run):
+    """ Release the most current revision snap to channel
+    """
+    latest_release = snapapi.latest(name, version)
+    click.echo(latest_release)
+    if dry_run:
+        click.echo("dry-run only:")
+        click.echo(f"  > snapcraft release {name} {latest_release['rev']} {channel}")
+    else:
+        click.echo(
+            sh.snapcraft.release(name, latest_release["rev"], channel, _err_to_out=True)
+        )
+
 if __name__ == "__main__":
     cli()
